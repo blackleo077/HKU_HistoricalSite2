@@ -4,5 +4,12 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
-  m_configObjects: {}
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Leo/HistoricalSite.unity
+    guid: f3196da9d1acb3d49b931314ccb0210f
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: b2c99323223e04e41baa8d6121af760a, type: 2}
+    com.unity.input.settings: {fileID: 11400000, guid: f6281454afbfa0541b01a4318ab72abf, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 8cd1852ef4e90f54cb28afd67d268085, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: a5493ceb51e308444a436dfbcd8572e0, type: 2}
