@@ -62,8 +62,10 @@ public class TeleportAimHandlerParabolic : TeleportAimHandler
 		var aimPosition = startRay.origin;
 		var aimDirection = startRay.direction * AimVelocity;
 		var rangeSquared = Range * Range;
+		Debug.LogFormat("Pos: {0}, Dir: {1}, Range: {2}, Ray start: {3}", aimPosition, aimDirection, rangeSquared, startRay.origin);
 		do
 		{
+			Debug.Log("Curve laser");
 			points.Add(aimPosition);
 
 			var aimVector = aimDirection;

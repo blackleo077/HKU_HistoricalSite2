@@ -71,7 +71,6 @@ public class TeleportTransitionBlink : TeleportTransition
 		}
 
 		//OVRInspector.instance.fader.SetFadeLevel(0);
-
 		LocomotionTeleport.IsTransitioning = false;
 	}
 }
