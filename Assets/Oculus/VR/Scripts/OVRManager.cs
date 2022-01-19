@@ -1413,14 +1413,15 @@ public class OVRManager : MonoBehaviour, OVRMixedRealityCaptureConfiguration
 
 	public static string UnityAlphaOrBetaVersionWarningMessage = "WARNING: It's not recommended to use Unity alpha/beta release in Oculus development. Use a stable release if you encounter any issue.";
 
-#region Unity Messages
-
+	#region Unity Messages
 	public static bool OVRManagerinitialized = false;
+	//public static bool OVRManagerinitialized = false;
 	private void InitOVRManager()
 	{
 		// Only allow one instance at runtime.
 		if (instance != null)
 		{
+			Debug.LogError("Check init");
 			enabled = false;
 			DestroyImmediate(this);
 			return;
@@ -1583,13 +1584,16 @@ public class OVRManager : MonoBehaviour, OVRMixedRealityCaptureConfiguration
 
 	}
 
-	private void Awake()
+	private void Start()
 	{
 #if !USING_XR_SDK
 		//For legacy, we should initialize OVRManager in all cases.
 		//For now, in XR SDK, only initialize if OVRPlugin is initialized.
 		InitOVRManager();
+        Debug.LogError("OVRManager XRSDK Init");
 #else
+
+		Debug.LogError("OVRManager Init");
 		if (OVRPlugin.initialized)
 			InitOVRManager();
 #endif

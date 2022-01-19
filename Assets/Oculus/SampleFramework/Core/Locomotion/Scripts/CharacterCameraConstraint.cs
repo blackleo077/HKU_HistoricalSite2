@@ -107,6 +107,7 @@ public class CharacterCameraConstraint : MonoBehaviour
 		}
 		else
 		{
+			Debug.Log(OVRScreenFade.instance.gameObject.name);
 			OVRScreenFade.instance.SetExplicitFade(0.0f);
 		}
 

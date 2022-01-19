@@ -63,7 +63,6 @@ public class TeleportOrientationHandlerThumbstick : TeleportOrientationHandler
             {
                 magnitude = rightMag;
                 direction = rightDir;
-				Debug.Log(magnitude + "Right");
             }
         }
         else
@@ -107,7 +106,6 @@ public class TeleportOrientationHandlerThumbstick : TeleportOrientationHandler
 		{
 			_currentRotation = tracking * LocomotionTeleport.GetHeadRotationY();
 		}
-		Debug.Log(magnitude + " " + RotateStickThreshold);
 
 		LocomotionTeleport.OnUpdateTeleportDestination(AimData.TargetValid, AimData.Destination, _currentRotation, GetLandingOrientation(OrientationMode, _currentRotation));
 	}

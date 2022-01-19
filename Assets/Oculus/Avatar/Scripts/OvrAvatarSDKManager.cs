@@ -67,6 +67,7 @@ public class OvrAvatarSDKManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = GameObject.FindObjectOfType<OvrAvatarSDKManager>();
+                Debug.LogError("Find EXist AvatarMan");
                 if (_instance == null)
                 {
                     GameObject manager = new GameObject("OvrAvatarSDKManager");
