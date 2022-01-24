@@ -9,6 +9,7 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
 {
 
     public static PhotonGameManager instance;
+    PhotonSpawnPlayer spawner;
 
     private void Awake()
     {
@@ -19,8 +20,8 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         Debug.Log("PhotonGameManager Init");
-        PhotonSpawnPlayer spawner = GetComponentInChildren<PhotonSpawnPlayer>();
-        spawner.SpawnPlayer();
+        spawner = GetComponentInChildren<PhotonSpawnPlayer>();
+        StartCoroutine( spawner.SpawnPlayer());
     }
 
     #region Photon Callbacks

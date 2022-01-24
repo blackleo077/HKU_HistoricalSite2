@@ -22,9 +22,11 @@ public class PhotonSpawnPlayer : MonoBehaviour
     float SpawnRadius;
 
 
-    public void SpawnPlayer()
+    public IEnumerator  SpawnPlayer()
     {
+
         RemoveExistOVRPlayer();
+        yield return new WaitForEndOfFrame();
         SpawnPlayerObject();
     }
 
@@ -32,9 +34,9 @@ public class PhotonSpawnPlayer : MonoBehaviour
     {
         Debug.Log("Spawn");
         GameObject player = PhotonNetwork.Instantiate(VRPlayerPrefab.name, GetSpawnPosition(), Quaternion.identity);
-        
         ovrplayerlist.Add(player.GetComponent<PhotonOVRPlayer>());
         Debug.LogErrorFormat("PhotonOVRPlayer list : {0}", ovrplayerlist.Count);
+
 
     }
 

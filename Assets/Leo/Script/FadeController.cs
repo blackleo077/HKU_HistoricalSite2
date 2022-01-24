@@ -4,20 +4,8 @@ using UnityEngine;
 
 public class FadeController : MonoBehaviour
 {
-    [SerializeField]
     LocomotionTeleport locomotion;
-    // Start is called before the first frame update
-    private void OnEnable()
-    {
-        locomotion.EnterStatePreTeleport += TPStart;
-        locomotion.EnterStatePostTeleport += TPEnd;
-    }
 
-    private void OnDisable()
-    {
-        locomotion.EnterStatePreTeleport -= TPStart;
-        locomotion.EnterStatePostTeleport -= TPEnd;
-    }
     public void TPStart()
     {
         OVRScreenFade.instance.fadeTime = 0.1f;
@@ -28,5 +16,18 @@ public class FadeController : MonoBehaviour
     {
         OVRScreenFade.instance.fadeTime = 0.2f;
         OVRScreenFade.instance.FadeIn();
+    }
+
+    public void Register(LocomotionTeleport lc)
+    {
+        locomotion = lc;
+        locomotion.EnterStatePreTeleport += TPStart;
+        locomotion.EnterStatePostTeleport += TPEnd;
+    }
+
+    private void OnDestroy()
+    {
+        locomotion.EnterStatePreTeleport -= TPStart;
+        locomotion.EnterStatePostTeleport -= TPEnd;
     }
 }

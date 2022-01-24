@@ -3,30 +3,44 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent (typeof( LineRenderer))]
-public class Pointer : MonoBehaviour
+public class Pointer : Tools
 {
     [SerializeField]
     LayerMask ArtifactLayer;
 
-    [SerializeField]
-    float LaserWidth = 0.08f;
-
+    float LaserWidth = 0.01f;
     LineRenderer lr;
-
     Artifacts targetArtifact;
-    void Start()
+
+    protected override void Start()
     {
         lr = GetComponent<LineRenderer>();
         lr.SetWidth(LaserWidth, LaserWidth);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        ActiveLaser();
         setLaserBrightness(0.2f);
     }
 
+    protected override void OnToolTrigger()
+    {
+        lr.enabled = true;
+        base.OnToolTrigger();
+    }
+
+    protected override void OnToolActiviting()
+    {
+        ActiveLaser();
+        base.OnToolActiviting();
+    }
+
+    protected override void OnToolRelease()
+    {
+        lr.enabled = false;
+        base.OnToolRelease();
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+    }
 
     void ActiveLaser()
     {
@@ -42,6 +56,7 @@ public class Pointer : MonoBehaviour
                 //update new
                 if(targetArtifact)
                     targetArtifact.ShowInfoBoard(false);
+                Debug.Log("active board");
                 currentArtifact.ShowInfoBoard(true);
                 targetArtifact = currentArtifact;
             }
@@ -73,7 +88,6 @@ public class Pointer : MonoBehaviour
     public void setLaserBrightness(float brightness)
     {
         lr.material.SetFloat("_DistortionBlend", brightness);
-        Debug.Log(lr.material.GetFloat("_DistortionBlend"));
         
     }
 }

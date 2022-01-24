@@ -118,4 +118,9 @@ public class OvrAvatarRemoteDriver : OvrAvatarDriver
             UpdateTransformsFromPose(sdkAvatar);
         }
     }
+
+    private void OnDestroy()
+    {
+        Debug.LogError("Remote avatar is destroyed");
+    }
 }

@@ -1593,7 +1593,6 @@ public class OVRManager : MonoBehaviour, OVRMixedRealityCaptureConfiguration
         Debug.LogError("OVRManager XRSDK Init");
 #else
 
-		Debug.LogError("OVRManager Init");
 		if (OVRPlugin.initialized)
 			InitOVRManager();
 #endif

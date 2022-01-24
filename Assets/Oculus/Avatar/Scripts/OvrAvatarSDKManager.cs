@@ -67,7 +67,6 @@ public class OvrAvatarSDKManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = GameObject.FindObjectOfType<OvrAvatarSDKManager>();
-                Debug.LogError("Find EXist AvatarMan");
                 if (_instance == null)
                 {
                     GameObject manager = new GameObject("OvrAvatarSDKManager");
@@ -121,6 +120,7 @@ public class OvrAvatarSDKManager : MonoBehaviour
 
     void OnDestroy()
     {
+        Debug.LogError("SDKManagerDestroy");
         CAPI.Shutdown();
         CAPI.ovrAvatar_RegisterLoggingCallback(null);
         CAPI.ovrAvatar_Shutdown();

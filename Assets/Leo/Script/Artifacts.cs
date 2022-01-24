@@ -8,6 +8,7 @@ public class Artifacts : MonoBehaviour
     private string m_Name ;
     private string m_Description;
     private string m_Owner;
+
     public enum discoverStatus {
         hidden,
         visible,
@@ -16,7 +17,7 @@ public class Artifacts : MonoBehaviour
 
     private discoverStatus m_Status;
 
-    private GameObject infoBoard;
+    private InfoBoard infoBoard;
 
     public void Init()
     {
@@ -29,20 +30,19 @@ public class Artifacts : MonoBehaviour
     {
         if(active)
         {
-            if(infoBoard != null)
-            {
-                GameObject board = (GameObject)Resources.Load("InfoBoard") as GameObject;
-                InfoBoard info = board.GetComponent<InfoBoard>();
-                info.Init(m_Name, m_Description);
-                infoBoard = board;
+            if (infoBoard != null)
+                return;
 
-            }
+            infoBoard = GameObject.Instantiate((GameObject)Resources.Load("InfoBoard") as GameObject, transform.position , Quaternion.identity).GetComponent<InfoBoard>();
+            infoBoard.Init(m_Name, m_Description, transform.position,true,true);
         }
         else
         {
             if (infoBoard == null)
                 return;
-            Destroy(infoBoard);
+
+            Debug.Log("kill board2");
+            Destroy(infoBoard.gameObject);
         }
 
     }

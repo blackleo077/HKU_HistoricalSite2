@@ -12,19 +12,29 @@ using Oculus.Platform.Models;
 
 public class PhotonOVRPlayer : MonoBehaviour
 {
+    OVRInputController inputcontroller;
     PhotonView pview;
     OVRManager ovrManager;
     Camera cam;
-    GameObject LocalAvatarPrefab;
 
-    [SerializeField]
-    OvrAvatar myAvatar;
 
     [SerializeField]
     string AvatarID;
 
     bool BodyisLoaded = false;
     bool BodyNetworkSyncExists = false;
+
+    FadeController fadeController;
+    OVRCameraRig myCameraRig;
+    [SerializeField]
+    OvrAvatar myLocalAvatar;
+    OVRInputController inputController;
+    RemoteLoopbackManager avatarRemote;
+    LocomotionController teleportController;
+    BoundaryController boundaryController;
+
+    public OvrAvatar LocalAvatarPrefab;
+
 
     private void Awake()
     {
@@ -37,34 +47,44 @@ public class PhotonOVRPlayer : MonoBehaviour
     {
         if (BodyisLoaded && !BodyNetworkSyncExists)
         {
-            if (myAvatar.transform.childCount > 0)
+            if (myLocalAvatar.transform.childCount > 0)
             {
-                AddNetworkSyncToLocalAvatar();
+               // AddNetworkSyncToLocalAvatar();
             }
         }
     }
 
+    #region
+
+
+
+    #endregion
 
     void InitAvatar()
     {
-        if (!pview.IsMine)
+        if (pview.IsMine)
         {
-            Destroy(myAvatar.GetComponent<OvrAvatarLocalDriver>());
+
+            OvrAvatar localavatar = GameObject.Instantiate(LocalAvatarPrefab);
+            myLocalAvatar = localavatar;
+            //avatarRemote = myLocalAvatar.gameObject.AddComponent<RemoteLoopbackManager>();
+           // avatarRemote.LocalAvatar = myLocalAvatar;
+           // avatarRemote.LoopbackAvatar = myRemoteAvatar;
+
+            Core.Initialize();
+            Users.GetLoggedInUser().OnComplete(GetLoggedInUserCallback);
+            Request.RunCallbacks();
+
         }
-        Debug.LogError("Is My avatar:"+ pview.IsMine);
-        Core.Initialize();
-        Users.GetLoggedInUser().OnComplete(GetLoggedInUserCallback);
-        Request.RunCallbacks();
-        
     }
 
     void AddNetworkSyncToLocalAvatar()
     {
-        myAvatar.Body.gameObject.AddComponent<PhotonTransformView>();
-        myAvatar.HandLeft.gameObject.AddComponent<PhotonTransformView>();
-        myAvatar.HandRight.gameObject.AddComponent<PhotonTransformView>();
-        myAvatar.ControllerLeft.gameObject.AddComponent<PhotonTransformView>();
-        myAvatar.ControllerRight.gameObject.AddComponent<PhotonTransformView>();
+        myLocalAvatar.Body.gameObject.AddComponent<PhotonTransformView>();
+        myLocalAvatar.HandLeft.gameObject.AddComponent<PhotonTransformView>();
+        myLocalAvatar.HandRight.gameObject.AddComponent<PhotonTransformView>();
+        myLocalAvatar.ControllerLeft.gameObject.AddComponent<PhotonTransformView>();
+        myLocalAvatar.ControllerRight.gameObject.AddComponent<PhotonTransformView>();
         BodyNetworkSyncExists = true;
 
         Debug.LogError("Body Is Loaded on " + pview.ViewID);
@@ -75,10 +95,23 @@ public class PhotonOVRPlayer : MonoBehaviour
     void InitGeneral()
     {
         pview = GetComponent<PhotonView>();
+        myCameraRig = GetComponentInChildren<OVRCameraRig>();
+        teleportController = GetComponentInChildren<LocomotionController>();
+
         if (pview.IsMine)
         {
-            AddOVRComponents();
-            ActiveNecessaryComponents();
+            ovrManager = myCameraRig.gameObject.AddComponent<OVRManager>();
+            ovrManager.AllowRecenter = false;
+            ovrManager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;
+
+            cam = Camera.main.GetComponent<Camera>();
+            cam.gameObject.AddComponent<OVRScreenFade>();
+
+            
+            fadeController = gameObject.AddComponent<FadeController>();
+            fadeController.Register(teleportController.GetComponent<LocomotionTeleport>());
+
+           // boundaryController = gameObject.AddComponent<BoundaryController>();
         }
         else
         {
@@ -87,39 +120,28 @@ public class PhotonOVRPlayer : MonoBehaviour
     }
     private void GetLoggedInUserCallback(Message<User> message)
     {
-        AvatarID = PhotonSpawnPlayer.instance.GetAvatarID();
-
-        if (!message.IsError)
+        if (PhotonSpawnPlayer.instance)
         {
-            Debug.LogFormat("AvatarID ID {0} , OculusUserID: {1} , ID:{2}", myAvatar.oculusUserID, message.Data.OculusID, message.Data.ID);
-            Debug.LogError("No Error");
-            myAvatar.oculusUserID = message.Data.OculusID;
+            AvatarID = PhotonSpawnPlayer.instance.GetAvatarID();
         }
         else
         {
-            myAvatar.oculusUserID = AvatarID;
+            AvatarID = "10150030458762178";
+        }
+       // 
+
+        if (!message.IsError)
+        {
+            Debug.LogFormat("AvatarID ID {0} , OculusUserID: {1} , ID:{2}", myLocalAvatar.oculusUserID, message.Data.OculusID, message.Data.ID);
+            Debug.LogError("No Error");
+            myLocalAvatar.oculusUserID = message.Data.OculusID;
+        }
+        else
+        {
+            myLocalAvatar.oculusUserID = AvatarID;
             Debug.LogErrorFormat(message.GetError().Message);
         }
         BodyisLoaded = true;
-    }
-
-    void ActiveNecessaryComponents()
-    {
-        MonoBehaviour[] components = GetComponentsInChildren<MonoBehaviour>();
-
-        foreach (MonoBehaviour c in components)
-        {
-            c.enabled = true;
-
-        }
-    }
-
-    void AddOVRComponents()
-    {
-
-        ovrManager = transform.GetChild(0).gameObject.AddComponent<OVRManager>();
-        cam = ovrManager.transform.GetChild(0).GetChild(1).GetComponent<Camera>();
-        cam.gameObject.AddComponent<OVRScreenFade>();
     }
 
     public void RemoveUnnecessaryComponents()
@@ -141,10 +163,6 @@ public class PhotonOVRPlayer : MonoBehaviour
             }
             else
             {
-                if (c is OVRManager)
-                {
-                    Debug.LogErrorFormat("Destroy OVRManager on {0}:{1}", c.name, c.GetInstanceID());
-                }
                 Destroy(c);
             }
 

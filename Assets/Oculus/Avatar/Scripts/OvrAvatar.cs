@@ -237,7 +237,6 @@ public class OvrAvatar : MonoBehaviour
 
     void OnDestroy()
     {
-        Debug.LogError("Destroy LocalAvatar");
         if (sdkAvatar != IntPtr.Zero)
         {
             CAPI.ovrAvatar_Destroy(sdkAvatar);
