@@ -30,4 +30,5 @@ public class FadeController : MonoBehaviour
         locomotion.EnterStatePreTeleport -= TPStart;
         locomotion.EnterStatePostTeleport -= TPEnd;
     }
+
 }

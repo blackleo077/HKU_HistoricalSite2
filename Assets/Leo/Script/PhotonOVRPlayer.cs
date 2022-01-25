@@ -10,12 +10,10 @@ using Oculus.Avatar;
 using Oculus.Platform;
 using Oculus.Platform.Models;
 
-public class PhotonOVRPlayer : MonoBehaviour
+public class PhotonOVRPlayer : MonoBehaviourPun
 {
-    OVRInputController inputcontroller;
-    PhotonView pview;
     OVRManager ovrManager;
-    Camera cam;
+    PhotonGameManager GM;
 
 
     [SerializeField]
@@ -24,23 +22,64 @@ public class PhotonOVRPlayer : MonoBehaviour
     bool BodyisLoaded = false;
     bool BodyNetworkSyncExists = false;
 
-    FadeController fadeController;
-    OVRCameraRig myCameraRig;
-    [SerializeField]
-    OvrAvatar myLocalAvatar;
-    OVRInputController inputController;
-    RemoteLoopbackManager avatarRemote;
-    LocomotionController teleportController;
-    BoundaryController boundaryController;
+    [SerializeField] FadeController fadeController;
+    [SerializeField] OVRCameraRig myCameraRig;
+    [SerializeField] Camera mycamera;
+    [SerializeField] OvrAvatar myLocalAvatar;
+    [SerializeField] OVRInputController inputController;
+    [SerializeField] BoundaryController boundaryController;
+    [SerializeField] TeleportController teleportController;
+    [SerializeField] LocomotionController locomotionController;
+    [SerializeField] LocomotionTeleport locomotionTeleport;
+    [SerializeField] SimpleCapsuleWithStickMovement stickmovement;
 
-    public OvrAvatar LocalAvatarPrefab;
+    [SerializeField] OvrAvatar LocalAvatarPrefab;
 
+    GameObject Robot;
+    OvrAvatarComponent[] SyncRobotComponent;
 
     private void Awake()
     {
         Debug.LogError("OVRPlayer Init");
-        InitGeneral();
-        InitAvatar();
+        if (PhotonNetwork.IsConnected)
+        {
+            GM = GameObject.FindObjectOfType<PhotonGameManager>();
+            GM.GetSpawnPlayer().AddOVRPlayer(this);
+            Debug.LogError("GM "+ GM);
+        }
+
+        if (photonView.IsMine)
+        {
+            Debug.LogError("Add OVRManager");
+            ovrManager = myCameraRig.gameObject.AddComponent<OVRManager>(); // singleton
+            ovrManager.AllowRecenter = false;
+            ovrManager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;
+        }
+        else
+        {
+            RemoveUnnecessaryComponents();
+        }
+        //InitAvatar();
+    }
+
+    private void Start()
+    {
+        if (photonView.IsMine)
+        {
+            Debug.LogError("Keep camera enable");
+            mycamera.enabled = true;
+            mycamera.gameObject.AddComponent<OVRScreenFade>();  // singleton
+
+
+            fadeController = gameObject.AddComponent<FadeController>();
+            fadeController.Register(GetComponentInChildren<LocomotionTeleport>());
+        }
+        else
+        {
+            Debug.LogError("disable camera ");
+            mycamera.enabled = false;
+        }
+
     }
 
     private void LateUpdate()
@@ -49,8 +88,12 @@ public class PhotonOVRPlayer : MonoBehaviour
         {
             if (myLocalAvatar.transform.childCount > 0)
             {
-               // AddNetworkSyncToLocalAvatar();
+                AddNetworkSyncToLocalAvatar();
             }
+        }
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+         
         }
     }
 
@@ -62,14 +105,10 @@ public class PhotonOVRPlayer : MonoBehaviour
 
     void InitAvatar()
     {
-        if (pview.IsMine)
+        if (photonView.IsMine)
         {
-
             OvrAvatar localavatar = GameObject.Instantiate(LocalAvatarPrefab);
             myLocalAvatar = localavatar;
-            //avatarRemote = myLocalAvatar.gameObject.AddComponent<RemoteLoopbackManager>();
-           // avatarRemote.LocalAvatar = myLocalAvatar;
-           // avatarRemote.LoopbackAvatar = myRemoteAvatar;
 
             Core.Initialize();
             Users.GetLoggedInUser().OnComplete(GetLoggedInUserCallback);
@@ -80,55 +119,47 @@ public class PhotonOVRPlayer : MonoBehaviour
 
     void AddNetworkSyncToLocalAvatar()
     {
-        myLocalAvatar.Body.gameObject.AddComponent<PhotonTransformView>();
-        myLocalAvatar.HandLeft.gameObject.AddComponent<PhotonTransformView>();
-        myLocalAvatar.HandRight.gameObject.AddComponent<PhotonTransformView>();
-        myLocalAvatar.ControllerLeft.gameObject.AddComponent<PhotonTransformView>();
-        myLocalAvatar.ControllerRight.gameObject.AddComponent<PhotonTransformView>();
+
+        myLocalAvatar.gameObject.AddComponent<SyncOVRAvatar>();
+        CloneDestroyScript();
+
+        //myLocalAvatar.Body.gameObject.AddComponent<PhotonTransformView>();
+        //myLocalAvatar.HandLeft.gameObject.AddComponent<PhotonTransformView>();
+        //myLocalAvatar.HandRight.gameObject.AddComponent<PhotonTransformView>();
+        //myLocalAvatar.ControllerLeft.gameObject.AddComponent<PhotonTransformView>();
+        //myLocalAvatar.ControllerRight.gameObject.AddComponent<PhotonTransformView>();
         BodyNetworkSyncExists = true;
 
-        Debug.LogError("Body Is Loaded on " + pview.ViewID);
+        Debug.LogError("Body Is Loaded on " + photonView.ViewID);
         Debug.LogError("AvatarID: " + AvatarID);
 
     }
 
-    void InitGeneral()
+    void CloneDestroyScript()
     {
-        pview = GetComponent<PhotonView>();
-        myCameraRig = GetComponentInChildren<OVRCameraRig>();
-        teleportController = GetComponentInChildren<LocomotionController>();
-
-        if (pview.IsMine)
+        Robot = new GameObject("OVRRobot");
+        SyncRobotComponent = Robot.GetComponentsInChildren<OvrAvatarComponent>();
+        foreach(OvrAvatarComponent comp in SyncRobotComponent)
         {
-            ovrManager = myCameraRig.gameObject.AddComponent<OVRManager>();
-            ovrManager.AllowRecenter = false;
-            ovrManager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;
-
-            cam = Camera.main.GetComponent<Camera>();
-            cam.gameObject.AddComponent<OVRScreenFade>();
-
-            
-            fadeController = gameObject.AddComponent<FadeController>();
-            fadeController.Register(teleportController.GetComponent<LocomotionTeleport>());
-
-           // boundaryController = gameObject.AddComponent<BoundaryController>();
+           // comp.RenderParts
         }
-        else
-        {
-            RemoveUnnecessaryComponents();
-        }
+
     }
+
+
+
+    #region  CallBack Method
+
     private void GetLoggedInUserCallback(Message<User> message)
     {
-        if (PhotonSpawnPlayer.instance)
+        if (GM.GetSpawnPlayer())
         {
-            AvatarID = PhotonSpawnPlayer.instance.GetAvatarID();
+            AvatarID = GM.GetAvatarID() ;
         }
         else
         {
             AvatarID = "10150030458762178";
         }
-       // 
 
         if (!message.IsError)
         {
@@ -143,33 +174,117 @@ public class PhotonOVRPlayer : MonoBehaviour
         }
         BodyisLoaded = true;
     }
+    #endregion
+
+
+    #region Public method
 
     public void RemoveUnnecessaryComponents()
     {
-        DestoryComponents();
-        DestroyCameraInChildren();
+        Debug.LogError("Remove unnesseary");
+        Destroy(myCameraRig);
         DestroyAudioListenerInChildren();
         DestroyPhysicsComponents();
+        Destroy(locomotionController.gameObject);
+        Destroy(stickmovement);
+        Destroy(boundaryController);
 
     }
+
+    public void RecallPlayers()
+    {
+
+        Vector3 targetPos = transform.position;
+        GM.MoveToMaster(targetPos);
+        /*
+        List<PhotonOVRPlayer> players = GM.GetSpawnPlayer().GetPhotonOVRPlayer();
+        Debug.LogErrorFormat("Exist players: {0}",players.Count);
+        foreach (PhotonOVRPlayer p in players)
+        {
+            Debug.LogError(p.photonView.ViewID+"Manual call rpc");
+            //p.TeleportTo(targetPos);
+        }
+
+        Debug.LogError("Photon network players : " +PhotonNetwork.PlayerList.Length);
+        
+        photonView.RPC("TeleportTo", RpcTarget.All,targetPos);
+        */
+    }
+
+    public Camera GetCamera()
+    {
+        return mycamera;
+    }
+
+    public OVRCameraRig GetOVRRig()
+    {
+        return myCameraRig;
+    }
+
+    public OVRManager GetOVRManager()
+    {
+        return ovrManager;
+    }
+
+    public void testRPC(string msg)
+    {
+        if (photonView.IsMine)
+        {
+            Debug.LogError(photonView.ViewID + "receive rpc call " + msg);
+        }
+        else
+        {
+            Debug.LogError(photonView.ViewID + " Not my object" + msg);
+        }
+    }
+
+    public void TeleportTo(Vector3 tplocation)
+    {
+        if (photonView.IsMine)
+        {
+            Debug.LogError("Mine Object"+photonView);
+            Debug.LogError(photonView.ViewID + " receive RPC Client Call Teleport to " + tplocation);
+            StartCoroutine(SmoothTeleport(tplocation));
+        }
+        else
+        {
+
+            Debug.LogError("Not My Object" + photonView);
+        }
+    }
+    IEnumerator SmoothTeleport(Vector3 location)
+    {
+        if(fadeController)
+            fadeController.TPStart();
+        yield return new WaitForSeconds(0.5f);
+        teleportController.Teleport(location);
+        if(fadeController)
+            fadeController.TPEnd();
+
+        Debug.LogErrorFormat("Player {0} tp complete", photonView.ViewID);
+    }
+    #endregion
+
+    #region destroy method 
     private void DestoryComponents()
     {
         MonoBehaviour[] components = GetComponentsInChildren<MonoBehaviour>();
 
         foreach (MonoBehaviour c in components)
         {
-            if (c is PhotonView || c is PhotonOVRPlayer || c is MonoBehaviourPun|| c is OvrAvatar || c is RemoteLoopbackManager)
+            if (c is PhotonView || c is PhotonOVRPlayer || c is MonoBehaviourPun|| c is FadeController || c is TeleportController)
             {
             }
             else
             {
+                Debug.LogError("Destroy "+c);
                 Destroy(c);
             }
 
         }
     }
 
-    void DestroyPhysicsComponents()
+    private void DestroyPhysicsComponents()
     {
         Collider[] colliders = GetComponentsInChildren<Collider>();
         Rigidbody[] rigidbodies = GetComponentsInChildren<Rigidbody>();
@@ -184,16 +299,17 @@ public class PhotonOVRPlayer : MonoBehaviour
         }
     }
 
-    void DestroyCameraInChildren()
+    private void DestroyCameraInChildren()
     {
         Camera[] cameras = GetComponentsInChildren<Camera>();
+        Debug.LogError("Destroy cameras");
         foreach (Camera cam in cameras)
         {
             Destroy(cam);
         }
     }
 
-    void DestroyAudioListenerInChildren()
+    private void DestroyAudioListenerInChildren()
     {
         AudioListener[] audioListeners = GetComponentsInChildren<AudioListener>();
         foreach (AudioListener aud in audioListeners)
@@ -201,4 +317,12 @@ public class PhotonOVRPlayer : MonoBehaviour
             Destroy(aud);
         }
     }
+
+
+    private void OnDestroy()
+    {
+
+    }
+
+    #endregion
 }

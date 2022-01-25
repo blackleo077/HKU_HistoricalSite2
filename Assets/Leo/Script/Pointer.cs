@@ -33,6 +33,11 @@ public class Pointer : Tools
 
     protected override void OnToolRelease()
     {
+        if (targetArtifact)
+        {
+            targetArtifact.ShowInfoBoard(false);
+            targetArtifact = null;
+        }
         lr.enabled = false;
         base.OnToolRelease();
     }
@@ -41,6 +46,8 @@ public class Pointer : Tools
     {
         base.OnDestroy();
     }
+
+
 
     void ActiveLaser()
     {

@@ -441,7 +441,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8109327442633529055}
-  - component: {fileID: 8109327442633529056}
+  - component: {fileID: 1074204973}
   m_Layer: 0
   m_Name: LeftEyeAnchor
   m_TagString: Untagged
@@ -463,7 +463,7 @@ Transform:
   m_Father: {fileID: 8109327443503100891}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!20 &8109327442633529056
+--- !u!20 &1074204973
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -499,7 +499,7 @@ Camera:
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 1
-  m_HDR: 0
+  m_HDR: 1
   m_AllowMSAA: 1
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
@@ -621,6 +621,7 @@ GameObject:
   - component: {fileID: 56166882}
   - component: {fileID: 56166883}
   - component: {fileID: 56166884}
+  - component: {fileID: 2778481186437289381}
   m_Layer: 0
   m_Name: OVRPlayer
   m_TagString: Untagged
@@ -658,8 +659,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AvatarID: 
+  fadeController: {fileID: 0}
+  myCameraRig: {fileID: 8109327442363008083}
+  mycamera: {fileID: 8109327443330999193}
   myLocalAvatar: {fileID: 0}
-  myRemoteAvatar: {fileID: 0}
+  inputController: {fileID: 56166881}
+  boundaryController: {fileID: 56166884}
+  teleportController: {fileID: 2778481186437289381}
+  locomotionController: {fileID: 667580738672499559}
+  locomotionTeleport: {fileID: 667580738672499556}
+  stickmovement: {fileID: 56166883}
   LocalAvatarPrefab: {fileID: 11437430, guid: 84c8b8609f9bb434eaf5248f17ff1293, type: 3}
 --- !u!114 &4012905808792300387
 MonoBehaviour:
@@ -761,6 +770,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LaserButton: 8192
   LaserAxis: 1
+  RecallTeleportButton: 15
   targettool: {fileID: 0}
 --- !u!114 &56166882
 MonoBehaviour:
@@ -812,6 +822,20 @@ MonoBehaviour:
   WarningBoardPrefab: {fileID: 676351581630350367, guid: e533a44b8828bd74fa072217bd031dd2, type: 3}
   SafetyDistance: 0.7
   cameraoffset: 1
+--- !u!114 &2778481186437289381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8109327442807346059}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9255d0ec5f4043b42a3b6741a31f6bd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CubePrefab: {fileID: 0}
+  offsetDistance: 0.5
 --- !u!1 &8109327443330999190
 GameObject:
   m_ObjectHideFlags: 0
@@ -1008,7 +1032,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8109327444020949640}
-  - component: {fileID: 8109327444020949641}
+  - component: {fileID: 1556756659}
   m_Layer: 0
   m_Name: RightEyeAnchor
   m_TagString: Untagged
@@ -1030,7 +1054,7 @@ Transform:
   m_Father: {fileID: 8109327443503100891}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!20 &8109327444020949641
+--- !u!20 &1556756659
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1066,7 +1090,7 @@ Camera:
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 2
-  m_HDR: 0
+  m_HDR: 1
   m_AllowMSAA: 1
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
@@ -1391,6 +1415,28 @@ PrefabInstance:
       objectReference: {fileID: 8109327442807346063}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1c1373fe07b4d5f4ab0d1ca0fc3cc191, type: 3}
+--- !u!114 &667580738672499559 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 667580738400454034, guid: 1c1373fe07b4d5f4ab0d1ca0fc3cc191, type: 3}
+  m_PrefabInstance: {fileID: 272047861}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 085d9ec7bb5e55f48b879d93931f553e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &667580738672499556 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 667580738400454033, guid: 1c1373fe07b4d5f4ab0d1ca0fc3cc191, type: 3}
+  m_PrefabInstance: {fileID: 272047861}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfcbed738e5f16548bc6b4284038f7d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &667580738672499575 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 667580738400454018, guid: 1c1373fe07b4d5f4ab0d1ca0fc3cc191, type: 3}

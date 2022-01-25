@@ -9,6 +9,9 @@ public class BoundaryController : MonoBehaviour
     public GameObject WarningBoardPrefab;
 
     WarningBoard warningBoard;
+
+    PhotonOVRPlayer player;
+    OVRManager ovrmanager;
     OVRCameraRig ovrRig;
     OVRBoundary myboundary;
     Camera maincam;
@@ -21,18 +24,29 @@ public class BoundaryController : MonoBehaviour
     void Start()
     {
         //spawn
-        ovrRig = GetComponentInChildren<OVRCameraRig>();
-        maincam = Camera.main;
+        player = GetComponent<PhotonOVRPlayer>();
+        ovrRig = player.GetOVRRig();
+        maincam = player.GetCamera();
+        ovrmanager = player.GetOVRManager();
 
 
+    }
+
+    private void OnEnable()
+    {
         myboundary = OVRManager.boundary;
-        myboundary.SetVisible(false);
+    }
+
+    private void OnDisable()
+    {
+        myboundary = null;
     }
 
     // Update is called once per frame
     void Update()
     {
-        CheckHeadDistance();
+        if(myboundary!=null)
+            CheckHeadDistance();
     }
 
 
@@ -47,7 +61,6 @@ public class BoundaryController : MonoBehaviour
             {
                 warningBoard = GameObject.Instantiate(WarningBoardPrefab, maincam.transform.position, Quaternion.identity).GetComponent<WarningBoard>();
             }
-            Debug.Log(targetpos);
                 warningBoard.ShowBoard(targetpos);
         }
         else

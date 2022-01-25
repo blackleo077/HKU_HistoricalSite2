@@ -10,17 +10,24 @@ public class ToolSpawner : MonoBehaviour
     public Transform handR;
     public Tools[] ToolsPrefab;
 
+    public enum ToolsType
+    {
+        laser,
+    }
+
     Tools currentTools;
 
     private void Start()
     {
-        SpawnTool(ToolsPrefab[0]);
     }
 
-    public void SpawnTool(Tools targetTool)
+    public void SpawnTool(ToolsType toolsType)
     {
+        Debug.Log("SpawnTool");
         RemoveExistTool();
-        Tools tool = GameObject.Instantiate(targetTool.gameObject, Vector3.zero, Quaternion.identity, handR).GetComponent<Tools>();
+        Tools tool = GameObject.Instantiate(ToolsPrefab[(int)toolsType].gameObject, Vector3.zero, Quaternion.identity, handR).GetComponent<Tools>();
+        tool.transform.localPosition = Vector3.zero;
+        tool.transform.localRotation = Quaternion.identity;
         currentTools = tool;
         tool.SetInputController(inputcontroller);
     }

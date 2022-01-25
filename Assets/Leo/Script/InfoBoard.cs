@@ -7,6 +7,7 @@ public class InfoBoard : MonoBehaviour
 {
     private string name;
     private string description;
+    private Transform root;
     private Vector3 SpawnPos;
     private Vector3 FloatingPos;
 
@@ -25,14 +26,18 @@ public class InfoBoard : MonoBehaviour
     public Text UI_name;
     public Text UI_description;
 
+    private void Start()
+    {
+        
+    }
+
     private void Update()
     {
+
         if (isSpawned)
         {
             if(isFloat) Float();
             if (isRotatY) RotateY();
-
-            transform.LookAt(Camera.main.transform);
             transform.localScale = Vector3.Lerp(transform.localScale, ScaleWithCamerDistance(), 1);
         }
         else
@@ -41,6 +46,7 @@ public class InfoBoard : MonoBehaviour
             transform.localScale = Vector3.Lerp(transform.localScale, ScaleWithCamerDistance(), PopupSpeed * Time.deltaTime);
             isSpawned = Vector3.Distance( transform.position , SpawnPos)<0.01f ? true : false;
         }
+        root.LookAt(Camera.main.transform);
 
     }
     public void Init(string name, string description, Vector3 startPos, bool isFloat, bool isRotatY)
@@ -51,13 +57,14 @@ public class InfoBoard : MonoBehaviour
         FloatingPos = this.SpawnPos;
         this.isFloat = isFloat;
         this.isRotatY = isRotatY;
-
-        transform.LookAt(Camera.main.transform);
+        root = transform.GetChild(0);
         SetInfo();
     }
 
     void SetInfo()
     {
+        if (name == "" || description == "")
+            return;
         UI_name.text = name;
         UI_description.text = description;
     }
@@ -83,6 +90,8 @@ public class InfoBoard : MonoBehaviour
         return Vector3.one * size;
        
     }
+
+
 
 
 }

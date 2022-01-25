@@ -7,37 +7,28 @@ using Photon.Realtime;
 
 public class PhotonSpawnPlayer : MonoBehaviour
 {
-    public static PhotonSpawnPlayer instance;
-    public List<PhotonOVRPlayer> ovrplayerlist;
-    private void Awake()
-    {
-        if (instance == null)
-            instance = this;
-    }
+    List<PhotonOVRPlayer> ovrplayerlist = new List<PhotonOVRPlayer>();
+
+
 
     public GameObject VRPlayerPrefab;
     public Transform SpawnPoint;
 
-    [SerializeField]
-    float SpawnRadius;
+    float SpawnRadius =0.5f;
 
-
-    public IEnumerator  SpawnPlayer()
+    private void Update()
     {
-
-        RemoveExistOVRPlayer();
-        yield return new WaitForEndOfFrame();
-        SpawnPlayerObject();
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            SpawnPlayer();
+        }
     }
+
+    #region Private Method
 
     void SpawnPlayerObject()
     {
-        Debug.Log("Spawn");
         GameObject player = PhotonNetwork.Instantiate(VRPlayerPrefab.name, GetSpawnPosition(), Quaternion.identity);
-        ovrplayerlist.Add(player.GetComponent<PhotonOVRPlayer>());
-        Debug.LogErrorFormat("PhotonOVRPlayer list : {0}", ovrplayerlist.Count);
-
-
     }
 
     Vector3 GetSpawnPosition()
@@ -49,26 +40,29 @@ public class PhotonSpawnPlayer : MonoBehaviour
         return spawnpos;
     }
 
+    #endregion
 
-    void RemoveExistOVRPlayer()
+    #region Public Method
+    public void SpawnPlayer()
     {
-
-        PhotonView[] ovrplayer = PhotonView.FindObjectsOfType<PhotonView>();
-        //Debug.LogErrorFormat("PhotonView list : {0}",ovrplayer.Length);
-        //Debug.LogErrorFormat("PhotonOVRPlayer list : {0}", ovrplayerlist.Count);
-
-        foreach (PhotonView player in ovrplayer)
-        {
-            if (!player.IsMine)
-            {
-                Debug.LogError("Not my Player. Remove its OVRManager");
-                player.GetComponent<PhotonOVRPlayer>().RemoveUnnecessaryComponents();
-            }
-        }
+        SpawnPlayerObject();
     }
 
-    public string GetAvatarID()
+    public List<PhotonOVRPlayer> GetPhotonOVRPlayer()
     {
-        return "10150030458762178";
+        return ovrplayerlist;
     }
+
+    public void AddOVRPlayer(PhotonOVRPlayer player)
+    {
+        ovrplayerlist.Add(player);
+        Debug.LogError("Current Player:"+ovrplayerlist.Count);
+    }
+
+    public void RemoveOVRPlayer(PhotonOVRPlayer player)
+    {
+        ovrplayerlist.Remove(player);
+        Debug.LogError("Current Player:" + ovrplayerlist.Count);
+    }
+    #endregion
 }

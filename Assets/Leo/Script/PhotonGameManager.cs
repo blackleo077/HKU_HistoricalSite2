@@ -9,7 +9,9 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
 {
 
     public static PhotonGameManager instance;
-    PhotonSpawnPlayer spawner;
+    [SerializeField]
+    PhotonSpawnPlayer spawnPlayer;
+    
 
     private void Awake()
     {
@@ -17,11 +19,44 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
             instance = this;
     }
 
+    public PhotonSpawnPlayer GetSpawnPlayer()
+    {
+        return spawnPlayer;
+    }
+
+    public void MoveToMaster(Vector3 pos)
+    {
+        Debug.LogError("GM MoveToMaster"+pos);
+        photonView.RPC("MovePlayers", RpcTarget.All, pos);
+    }
+
+    [PunRPC]
+    void MovePlayers(Vector3 pos)
+    {
+       foreach( PhotonOVRPlayer player in spawnPlayer.GetPhotonOVRPlayer())
+        {
+            player.TeleportTo(pos);
+        }
+    }
+
     private void Start()
     {
         Debug.Log("PhotonGameManager Init");
-        spawner = GetComponentInChildren<PhotonSpawnPlayer>();
-        StartCoroutine( spawner.SpawnPlayer());
+        
+        if (PhotonNetwork.IsMasterClient)
+        {
+
+            Debug.LogError("Master Client Enter Room");
+            spawnPlayer.SpawnPlayer();
+
+        }
+        else
+        {
+            Debug.LogError("Normal Player Enter Room");
+
+            spawnPlayer.SpawnPlayer();
+        }
+        
     }
 
     #region Photon Callbacks
@@ -31,9 +66,18 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
         SceneManager.LoadScene("LoginPage");
     }
 
+    public override void OnJoinedRoom()
+    {
+        base.OnJoinedRoom();
+        Debug.LogError("Join room");
+       
+
+    }
+
     public override void OnPlayerEnteredRoom(Player other)
     {
         Debug.LogFormat("OnPlayerEnteredRoom() {0}", other.NickName); // not seen if you're the player connecting
+
     }
 
 
@@ -55,12 +99,15 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
 
     #region Public Methods
 
+    public string GetAvatarID()
+    {
+        return "10150030458762178";
+    }
 
     public void LeaveRoom()
     {
         PhotonNetwork.LeaveRoom();
     }
-
 
     #endregion
 }

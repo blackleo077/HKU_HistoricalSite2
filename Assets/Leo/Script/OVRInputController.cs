@@ -6,41 +6,72 @@ using UnityEngine.Events;
 using Photon.Pun;
 
 [RequireComponent(typeof(ToolSpawner))]
-public class OVRInputController : MonoBehaviour
+public class OVRInputController : MonoBehaviourPun
 {
-    OVRInput.Controller TeleportThumbstick;
+    PhotonOVRPlayer player;
+
     public OVRInput.Button LaserButton;
     public OVRInput.Axis1D LaserAxis;
-    OVRInput.Controller ResetButton;
+
+    public OVRInput.Button RecallTeleportButton;
 
     public Tools targettool;
 
     private void Start()
     {
         GetComponent<ToolSpawner>().inputcontroller = this;
+        player = GetComponentInParent<PhotonOVRPlayer>();
     }
 
     private void Update()
     {
-        if(GetComponent<PhotonView>().IsMine)
+        if (GetComponent<PhotonView>().IsMine)
+        {
             UpdateLaser();
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                RecallPlayersButton();
+            }
+        }
     }
     void UpdateLaser()
     {
-        if (OVRInput.GetDown(LaserButton))
+        if (targettool != null)
         {
-            targettool.TriggerTool();
-        }
+            if (OVRInput.GetDown(LaserButton))
+            {
+                targettool.TriggerTool();
+            }
 
-        if (OVRInput.Get(LaserAxis) > 0.5f)
-        {
-            targettool.ActivatingTool();
-        }
+            if (OVRInput.Get(LaserAxis) > 0.5f)
+            {
+                targettool.ActivatingTool();
+            }
 
-        if (OVRInput.GetUp(LaserButton))
-        {
-            targettool.ReleaseTool();
+            if (OVRInput.GetUp(LaserButton))
+            {
+                targettool.ReleaseTool();
+            }
         }
+        else
+        {
+            GetComponent<ToolSpawner>().SpawnTool(ToolSpawner.ToolsType.laser);
+        }
+    }
+
+    void RecallPlayersButton()
+    {
+        if (OVRInput.GetDown(RecallTeleportButton) || Input.GetKeyDown(KeyCode.R) )
+        {
+            RecallPlayers();
+        }
+    }
+
+    void RecallPlayers()
+    {
+        Debug.LogError(photonView.ViewID +"RecallPlayer");
+        player.RecallPlayers();
     }
 
     public void attachTool(Tools t)

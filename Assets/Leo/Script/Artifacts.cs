@@ -19,6 +19,11 @@ public class Artifacts : MonoBehaviour
 
     private InfoBoard infoBoard;
 
+   private void Start()
+    {
+        Init();
+    }
+
     public void Init()
     {
         m_Name = "Name";
