@@ -14,9 +14,9 @@ TagManager:
   - Aritfact
   - Teleport
   - TeleportPoint
-  - myavatar
-  - otheravatar
-  - 
+  - FirstPersonAvatar
+  - ThirdPersonAvatar
+  - DontRenderAvatar
   - 
   - 
   - 

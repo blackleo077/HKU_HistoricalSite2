@@ -46,6 +46,19 @@ MonoBehaviour:
   - RecallPlayers
   - MovePlayers
   - TestRPCPlayer
+  - NetworkSpawnArtifact
+  - RequestNetworkSpawnArtifacts
+  - SyncNetworkArtifacts
+  - NetworkTrigger
+  - ActivatingToolRPC
+  - ReleaseToolRPC
+  - SpawnToolRPC
+  - TriggerToolRPC
+  - SetOculusUserID
+  - ReceivePacketDataRPC
+  - SendPacketDataRPC
+  - GetOculusUserID
+  - AddPlayerDataList
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

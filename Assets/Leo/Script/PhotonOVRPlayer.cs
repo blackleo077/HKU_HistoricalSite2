@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,7 +17,7 @@ public class PhotonOVRPlayer : MonoBehaviourPun
 
 
     [SerializeField]
-    string AvatarID;
+    public string AvatarID;
 
     bool BodyisLoaded = false;
     bool BodyNetworkSyncExists = false;
@@ -25,32 +25,40 @@ public class PhotonOVRPlayer : MonoBehaviourPun
     [SerializeField] FadeController fadeController;
     [SerializeField] OVRCameraRig myCameraRig;
     [SerializeField] Camera mycamera;
-    [SerializeField] OvrAvatar myLocalAvatar;
     [SerializeField] OVRInputController inputController;
     [SerializeField] BoundaryController boundaryController;
     [SerializeField] TeleportController teleportController;
     [SerializeField] LocomotionController locomotionController;
     [SerializeField] LocomotionTeleport locomotionTeleport;
     [SerializeField] SimpleCapsuleWithStickMovement stickmovement;
+    [SerializeField] RemoteLoopbackManager RemoteAvatarController;
 
-    [SerializeField] OvrAvatar LocalAvatarPrefab;
+    [SerializeField] OvrAvatar LocalAvatar;
+    [SerializeField] OvrAvatar RemoteAvatar;
+    [SerializeField] AvatarLayer DontRenderLayer;
+    [SerializeField] GameObject RemoteAvatarPrefab;
 
     GameObject Robot;
     OvrAvatarComponent[] SyncRobotComponent;
 
     private void Awake()
     {
+        if (photonView.IsMine)
+        {
+            RemoteAvatar.FirstPersonLayer = DontRenderLayer;
+            RemoteAvatar.ThirdPersonLayer = DontRenderLayer;
+        }
+        RemoteAvatarController.LoopbackAvatar = RemoteAvatar;
+        RemoteAvatarController.enabled = true;
         Debug.LogError("OVRPlayer Init");
         if (PhotonNetwork.IsConnected)
         {
             GM = GameObject.FindObjectOfType<PhotonGameManager>();
             GM.GetSpawnPlayer().AddOVRPlayer(this);
-            Debug.LogError("GM "+ GM);
         }
 
         if (photonView.IsMine)
         {
-            Debug.LogError("Add OVRManager");
             ovrManager = myCameraRig.gameObject.AddComponent<OVRManager>(); // singleton
             ovrManager.AllowRecenter = false;
             ovrManager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;
@@ -59,7 +67,47 @@ public class PhotonOVRPlayer : MonoBehaviourPun
         {
             RemoveUnnecessaryComponents();
         }
-        //InitAvatar();
+
+
+        //if is mine
+        //add avatar
+        //set my id to avatar
+        //ovr init
+
+        //if not mine
+        //get targert id
+        //add avatar component
+        //avatar script read my avatar id
+        //set id to avatar
+        
+        if (photonView.IsMine)
+        {
+            addRemoteAvatarInitial();
+            RemoteAvatar.FirstPersonLayer = DontRenderLayer;
+            RemoteAvatar.ThirdPersonLayer = DontRenderLayer;
+        }
+        else
+        {
+            AvatarID = "6703037566437409"; //init avatar
+            GetNetworkAvatarID();
+            Destroy(LocalAvatar.gameObject);
+        }
+        
+    }
+
+    void addRemoteAvatarInitial()
+    {
+        Debug.LogError("addRemoteAvatarInitial");
+
+        Core.Initialize();
+       // RemoteAvatar = GameObject.Instantiate(RemoteAvatarPrefab, transform).GetComponent<OvrAvatar>();
+       // if (photonView.IsMine)
+      //  {
+      //  }
+        Users.GetLoggedInUser().OnComplete(GetLoggedInUserCallback);
+        Request.RunCallbacks();
+        RemoteAvatarController.LoopbackAvatar = RemoteAvatar;
+        RemoteAvatarController.enabled = true;
     }
 
     private void Start()
@@ -79,102 +127,73 @@ public class PhotonOVRPlayer : MonoBehaviourPun
             Debug.LogError("disable camera ");
             mycamera.enabled = false;
         }
-
     }
-
-    private void LateUpdate()
-    {
-        if (BodyisLoaded && !BodyNetworkSyncExists)
-        {
-            if (myLocalAvatar.transform.childCount > 0)
-            {
-                AddNetworkSyncToLocalAvatar();
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-         
-        }
-    }
-
     #region
 
 
 
     #endregion
 
-    void InitAvatar()
-    {
-        if (photonView.IsMine)
-        {
-            OvrAvatar localavatar = GameObject.Instantiate(LocalAvatarPrefab);
-            myLocalAvatar = localavatar;
-
-            Core.Initialize();
-            Users.GetLoggedInUser().OnComplete(GetLoggedInUserCallback);
-            Request.RunCallbacks();
-
-        }
-    }
-
-    void AddNetworkSyncToLocalAvatar()
-    {
-
-        myLocalAvatar.gameObject.AddComponent<SyncOVRAvatar>();
-        CloneDestroyScript();
-
-        //myLocalAvatar.Body.gameObject.AddComponent<PhotonTransformView>();
-        //myLocalAvatar.HandLeft.gameObject.AddComponent<PhotonTransformView>();
-        //myLocalAvatar.HandRight.gameObject.AddComponent<PhotonTransformView>();
-        //myLocalAvatar.ControllerLeft.gameObject.AddComponent<PhotonTransformView>();
-        //myLocalAvatar.ControllerRight.gameObject.AddComponent<PhotonTransformView>();
-        BodyNetworkSyncExists = true;
-
-        Debug.LogError("Body Is Loaded on " + photonView.ViewID);
-        Debug.LogError("AvatarID: " + AvatarID);
-
-    }
-
-    void CloneDestroyScript()
-    {
-        Robot = new GameObject("OVRRobot");
-        SyncRobotComponent = Robot.GetComponentsInChildren<OvrAvatarComponent>();
-        foreach(OvrAvatarComponent comp in SyncRobotComponent)
-        {
-           // comp.RenderParts
-        }
-
-    }
-
-
-
     #region  CallBack Method
 
     private void GetLoggedInUserCallback(Message<User> message)
     {
-        if (GM.GetSpawnPlayer())
+        if (!message.IsError && photonView.IsMine)
         {
-            AvatarID = GM.GetAvatarID() ;
+            Debug.LogError("UID" + message.Data.ID.ToString());
+            Debug.LogError("OculusID" + message.Data.OculusID.ToString());
+            Debug.LogError("OculusID" + message.Data.DisplayName.ToString());
+            AvatarID = "4654852661299937";//message.Data.ID.ToString();
+            LocalAvatar.oculusUserID = message.Data.ID.ToString();
+            RemoteAvatar.oculusUserID = message.Data.ID.ToString();
+            Debug.LogErrorFormat("Is Mine - LocalAvatar.oculusUserID : " + LocalAvatar.oculusUserID);
+            GM.AddPlayerOculusAvatarID(PhotonNetwork.LocalPlayer.ActorNumber,AvatarID);
         }
         else
         {
-            AvatarID = "10150030458762178";
-        }
-
-        if (!message.IsError)
-        {
-            Debug.LogFormat("AvatarID ID {0} , OculusUserID: {1} , ID:{2}", myLocalAvatar.oculusUserID, message.Data.OculusID, message.Data.ID);
-            Debug.LogError("No Error");
-            myLocalAvatar.oculusUserID = message.Data.OculusID;
-        }
-        else
-        {
-            myLocalAvatar.oculusUserID = AvatarID;
-            Debug.LogErrorFormat(message.GetError().Message);
+            AvatarID = "4654852661299937";
+            LocalAvatar.oculusUserID = AvatarID;
+            RemoteAvatar.oculusUserID = AvatarID;
+            Debug.LogErrorFormat("Not Mine - LocalAvatar.oculusUserID : " + LocalAvatar.oculusUserID);
+            Debug.LogErrorFormat("GetLoggedInUserCallback Error");
         }
         BodyisLoaded = true;
     }
+
+    private void NetworkGetLoggedInUserCallback(Message<User> message)
+    {
+
+        Debug.LogError("NT　AvatarID :" + AvatarID);
+        LocalAvatar.oculusUserID = AvatarID;
+        RemoteAvatar.oculusUserID = AvatarID;
+    }
     #endregion
+
+    void GetNetworkAvatarID()
+    {
+        photonView.RPC("GetOculusUserID", photonView.Owner, PhotonNetwork.LocalPlayer.ActorNumber);
+    }
+
+    [PunRPC]
+    void GetOculusUserID(int playeractionnumber)
+    {
+        foreach (Player p in PhotonNetwork.PlayerList)
+        {
+            if(playeractionnumber == p.ActorNumber)
+            {
+                Debug.LogErrorFormat("Send my avatarid {0} to player {1}",AvatarID,p);
+                photonView.RPC("SetOculusUserID", p, AvatarID);
+            }
+        }
+    }
+
+    [PunRPC]
+    void SetOculusUserID(string id)
+    {
+        Debug.LogError("Set AvatarID "+id);
+        AvatarID = id;
+        addRemoteAvatarInitial();
+    }
 
 
     #region Public method

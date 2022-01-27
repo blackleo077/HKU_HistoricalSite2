@@ -547,6 +547,7 @@ public class OvrAvatar : MonoBehaviour
 
     void Start()
     {
+        Debug.LogError("OvrAvatarSDKManager Start " + transform.name);
         if (OvrAvatarSDKManager.Instance == null)
         {
             return;

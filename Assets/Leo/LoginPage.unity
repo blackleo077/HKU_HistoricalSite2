@@ -243,6 +243,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 883010558, guid: 70f40df58a7ad1e43a053bbff21f72a7, type: 3}
+      propertyPath: oculusUserID
+      value: 4654852661299937
+      objectReference: {fileID: 0}
+    - target: {fileID: 1427527397, guid: 70f40df58a7ad1e43a053bbff21f72a7, type: 3}
+      propertyPath: oculusUserID
+      value: 4654852661299937
+      objectReference: {fileID: 0}
     - target: {fileID: 4012905808792300387, guid: 70f40df58a7ad1e43a053bbff21f72a7, type: 3}
       propertyPath: sceneViewId
       value: 1
@@ -261,7 +269,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8109327442807346065, guid: 70f40df58a7ad1e43a053bbff21f72a7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8109327442807346065, guid: 70f40df58a7ad1e43a053bbff21f72a7, type: 3}
       propertyPath: m_LocalPosition.z

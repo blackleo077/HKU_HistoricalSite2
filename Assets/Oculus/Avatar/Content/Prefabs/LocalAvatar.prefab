@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 463470}
   - component: {fileID: 11437430}
   - component: {fileID: 11441414}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: LocalAvatar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -56,11 +56,11 @@ MonoBehaviour:
     UpdateRate: 0.033333335
   StartWithControllers: 1
   FirstPersonLayer:
-    layerIndex: 0
+    layerIndex: 9
   ThirdPersonLayer:
-    layerIndex: 0
-  ShowFirstPerson: 0
-  ShowThirdPerson: 1
+    layerIndex: 10
+  ShowFirstPerson: 1
+  ShowThirdPerson: 0
   LevelOfDetail: 3
   UseTransparentRenderQueue: 1
   Monochrome_SurfaceShader: {fileID: 4800000, guid: 73f67c4e7bf718b4385aa6b1f8a06591, type: 3}

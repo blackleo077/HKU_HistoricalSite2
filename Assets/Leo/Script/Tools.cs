@@ -10,6 +10,7 @@ public class Tools : MonoBehaviour
     protected string description;
     protected float power;
     protected float effectiveDistance;
+    protected bool isActivating;
 
     protected delegate void OnToolTriggerDelegate();
     protected OnToolTriggerDelegate ToolTriggerDelegate;
@@ -32,11 +33,20 @@ public class Tools : MonoBehaviour
 
     protected virtual void OnToolRelease() { }
 
-    public void TriggerTool(){ OnToolTrigger(); }
+    public void TriggerTool()
+    {
+        isActivating = true;
+        OnToolTrigger(); 
+    }
 
     public void ActivatingTool(){ OnToolActiviting(); }
 
-    public void ReleaseTool(){ OnToolRelease(); }
+    public void ReleaseTool()
+    {
+        isActivating = false;
+        OnToolRelease(); 
+    }
+
 
     public void SetInputController(OVRInputController controller)
     {

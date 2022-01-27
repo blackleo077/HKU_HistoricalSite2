@@ -11,6 +11,8 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
     public static PhotonGameManager instance;
     [SerializeField]
     PhotonSpawnPlayer spawnPlayer;
+
+    List<PhotonPlayerData> playerData = new List<PhotonPlayerData>();
     
 
     private void Awake()
@@ -28,6 +30,13 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
     {
         Debug.LogError("GM MoveToMaster"+pos);
         photonView.RPC("MovePlayers", RpcTarget.All, pos);
+    }
+
+    [PunRPC]
+    void AddPlayerDataList(int actionid, string oculusid)
+    {
+        PhotonPlayerData pd = new PhotonPlayerData(actionid, oculusid);
+        playerData.Add(pd);
     }
 
     [PunRPC]
@@ -107,6 +116,11 @@ public class PhotonGameManager : MonoBehaviourPunCallbacks
     public void LeaveRoom()
     {
         PhotonNetwork.LeaveRoom();
+    }
+
+    public void AddPlayerOculusAvatarID(int actionid, string oculusid)
+    {
+        photonView.RPC("AddPlayerDataList", RpcTarget.OthersBuffered, actionid, oculusid);
     }
 
     #endregion

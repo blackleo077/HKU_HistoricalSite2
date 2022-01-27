@@ -14,7 +14,7 @@ public class PhotonSpawnPlayer : MonoBehaviour
     public GameObject VRPlayerPrefab;
     public Transform SpawnPoint;
 
-    float SpawnRadius =0.5f;
+    float SpawnRadius =1f;
 
     private void Update()
     {

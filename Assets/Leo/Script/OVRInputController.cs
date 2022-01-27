@@ -5,6 +5,11 @@ using UnityEngine.Events;
 
 using Photon.Pun;
 
+
+using Oculus.Avatar;
+using Oculus.Platform;
+using Oculus.Platform.Models;
+
 [RequireComponent(typeof(ToolSpawner))]
 public class OVRInputController : MonoBehaviourPun
 {
@@ -14,6 +19,8 @@ public class OVRInputController : MonoBehaviourPun
     public OVRInput.Axis1D LaserAxis;
 
     public OVRInput.Button RecallTeleportButton;
+
+    public OVRInput.Button DebugPrintTexyBT;
 
     public Tools targettool;
 
@@ -27,8 +34,8 @@ public class OVRInputController : MonoBehaviourPun
     {
         if (GetComponent<PhotonView>().IsMine)
         {
-            UpdateLaser();
-
+             UpdateLaser();
+            DebugPrintText();
             if (PhotonNetwork.IsMasterClient)
             {
                 RecallPlayersButton();
@@ -42,21 +49,28 @@ public class OVRInputController : MonoBehaviourPun
             if (OVRInput.GetDown(LaserButton))
             {
                 targettool.TriggerTool();
+                if(PhotonNetwork.IsConnected)
+                    photonView.RPC("TriggerToolRPC", RpcTarget.Others);
             }
 
             if (OVRInput.Get(LaserAxis) > 0.5f)
             {
                 targettool.ActivatingTool();
+                //photonView.RPC("ActivatingToolRPC", RpcTarget.Others);
             }
 
             if (OVRInput.GetUp(LaserButton))
             {
                 targettool.ReleaseTool();
+                if (PhotonNetwork.IsConnected)
+                    photonView.RPC("ReleaseToolRPC", RpcTarget.Others);
             }
         }
         else
         {
             GetComponent<ToolSpawner>().SpawnTool(ToolSpawner.ToolsType.laser);
+            if (PhotonNetwork.IsConnected)
+                photonView.RPC("SpawnToolRPC", RpcTarget.OthersBuffered);
         }
     }
 
@@ -65,6 +79,14 @@ public class OVRInputController : MonoBehaviourPun
         if (OVRInput.GetDown(RecallTeleportButton) || Input.GetKeyDown(KeyCode.R) )
         {
             RecallPlayers();
+        }
+    }
+
+    void DebugPrintText()
+    {
+        if (OVRInput.GetDown(DebugPrintTexyBT) || Input.GetKeyDown(KeyCode.D))
+        {
+            Debug.LogError(photonView.ViewID + " player avatar" + player.AvatarID);
         }
     }
 
@@ -82,4 +104,33 @@ public class OVRInputController : MonoBehaviourPun
     {
         targettool = null ;
     }
+
+
+    #region
+    [PunRPC]
+    void TriggerToolRPC()
+    {
+        targettool.TriggerTool();
+    }
+
+    [PunRPC]
+    void ActivatingToolRPC()
+    {
+        targettool.ActivatingTool();
+    }
+
+    [PunRPC]
+    void ReleaseToolRPC()
+    {
+        targettool.ReleaseTool();
+    }
+
+    [PunRPC]
+    void SpawnToolRPC()
+    {
+        GetComponent<ToolSpawner>().SpawnTool(ToolSpawner.ToolsType.laser);
+    }
+
+
+    #endregion
 }

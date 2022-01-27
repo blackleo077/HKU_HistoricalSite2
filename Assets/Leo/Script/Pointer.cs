@@ -27,7 +27,6 @@ public class Pointer : Tools
 
     protected override void OnToolActiviting()
     {
-        ActiveLaser();
         base.OnToolActiviting();
     }
 
@@ -40,6 +39,14 @@ public class Pointer : Tools
         }
         lr.enabled = false;
         base.OnToolRelease();
+    }
+
+    private void Update()
+    {
+        if (isActivating)
+        {
+            ActiveLaser();
+        }
     }
 
     protected override void OnDestroy()
