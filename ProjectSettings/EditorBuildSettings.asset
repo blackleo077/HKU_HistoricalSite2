@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Oculus/Avatar2/Example/Scenes/MirrorScene/MirrorScene.unity
+    guid: 9f2e1693a4f24bc498477b3dfeb166aa
+  - enabled: 1
     path: Assets/Leo/LoginPage.unity
     guid: ead922f70a968be40a8b9f2a8b30182a
   - enabled: 1
