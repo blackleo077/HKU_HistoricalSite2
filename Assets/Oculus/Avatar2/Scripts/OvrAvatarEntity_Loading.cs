@@ -222,9 +222,11 @@ namespace Oculus.Avatar2
 
         protected void LoadUserWithFilters(in CAPI.ovrAvatar2EntityFilters filters)
         {
+            Debug.LogError(gameObject.name + ": LoadUserWithFilters");
             if (!OvrAvatarEntitlement.AccessTokenIsValid)
             {
                 OvrAvatarLog.LogError("Cannot LoadUser until a valid Access Token is set.", logScope, this);
+                Debug.LogError("AccessTokenIsValid");
                 return;
             }
 
@@ -238,6 +240,7 @@ namespace Oculus.Avatar2
             if (result == CAPI.ovrAvatar2Result.Pending)
             {
                 OvrAvatarLog.LogDebug($"Loaded user ID {_userId} onto entity {entityId}", logScope, this);
+                Debug.LogError("Loaded user ID"+ _userId);
                 ClearFailedLoadState();
                 IsPendingCdnAvatar = true;
                 OvrAvatarManager.Instance.RegisterLoadRequest(this, loadRequestId);

@@ -243,6 +243,7 @@ namespace Oculus.Avatar2
         }
         public void ApplyStreamData(in NativeSlice<byte> slice)
         {
+            Debug.Log("Apply stream data");
             if (slice.Length <= 0)
             {
                 OvrAvatarLog.LogError("NativeSlice has size 0", logScope, this);
@@ -253,6 +254,7 @@ namespace Oculus.Avatar2
 
             unsafe
             {
+                Debug.Log("_ExecuteApplyStreamData");
                 _ExecuteApplyStreamData((IntPtr)slice.GetUnsafePtr(), (UInt32)(slice.Length * sizeof(byte)));
             }
         }

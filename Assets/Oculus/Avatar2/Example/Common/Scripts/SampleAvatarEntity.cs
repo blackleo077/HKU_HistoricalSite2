@@ -171,6 +171,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
     {
         if (_userId == 0)
         {
+            Debug.LogError("LoadUserAvatar");
             LoadLocalAvatar();
             yield break;
         }
@@ -186,6 +187,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
             return;
         }
 
+        Debug.LogError("LoadLocalAvatar");
         string assetPostfix = OvrAvatarManager.IsAndroidStandalone ? _assetPostfixAndroid : _assetPostfixDefault;
 
         // Zip asset paths are relative to the inside of the zip.
@@ -351,6 +353,7 @@ public class SampleAvatarEntity : OvrAvatarEntity
 
     private IEnumerator Retry_HasAvatarRequest()
     {
+        Debug.LogError("Retry_HasAvatarRequest");
         const float HAS_AVATAR_RETRY_WAIT_TIME = 4.0f;
         const int HAS_AVATAR_RETRY_ATTEMPTS = 12;
 
@@ -548,6 +551,11 @@ public class SampleAvatarEntity : OvrAvatarEntity
     }
 
     #endregion // Change Check
+
+    public void SetActiveView(CAPI.ovrAvatar2EntityViewFlags view)
+    {
+        base.SetActiveView(view);
+    }
 
     // Debug
     #region Debug

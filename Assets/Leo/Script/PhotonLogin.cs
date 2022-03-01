@@ -14,7 +14,13 @@ public class PhotonLogin : MonoBehaviourPunCallbacks
         ConnectToServer();
     }
 
-
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            ConnectToServer();
+        }
+    }
 
     public void ConnectToServer()
     {
