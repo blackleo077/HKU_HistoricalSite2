@@ -94,10 +94,13 @@ public class RemoteLoopbackManager : MonoBehaviourPunCallbacks
                 args.Packet.Write(outputStream);
             }
 
-           // SendPacketData(outputStream.ToArray());
-           if(PhotonNetwork.IsConnected)
+            // SendPacketData(outputStream.ToArray());
+            if (PhotonNetwork.IsConnected)
+            {
                 photonView.RPC("SendPacketDataRPC", RpcTarget.All, outputStream.ToArray());
-           else
+                Debug.Log(photonView.ViewID + "Run SendPacket");
+            }
+            else
                 SendPacketData(outputStream.ToArray());
         }
     }

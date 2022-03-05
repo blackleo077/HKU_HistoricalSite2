@@ -8,6 +8,8 @@ public class Artifacts : MonoBehaviour
     private string m_Name ;
     private string m_Description;
     private string m_Owner;
+    private Sprite m_Image;
+
     private Vector3 m_location;
 
     private bool isNetworkTrigger;
@@ -22,17 +24,36 @@ public class Artifacts : MonoBehaviour
 
     private InfoBoard infoBoard;
 
-
-   private void Start()
+    public Vector3 Location
     {
-        Init();
+        get { return m_location; }
+        set { m_location = value; }
     }
 
-    public void Init()
+
+
+
+
+
+
+    private void Start()
+    {
+        SetInfoText();
+    }
+
+
+    #region Public method
+
+    public void SetInfoText()
     {
         m_Name = "Artifact xxx";
         m_Description = "St Mary's contains a Norman font, an ancient brass lectern, buried during the Civil Wars, and some interesting heraldic ornaments which date from the 15th century.";
         m_Status = discoverStatus.hidden;
+    }
+
+    public void SetInfoImage(Sprite img)
+    {
+        m_Image = img;
     }
 
     public void ShowInfoBoard(bool active)
@@ -59,18 +80,18 @@ public class Artifacts : MonoBehaviour
         }
     }
 
-
-
     public void setStatus(discoverStatus status)
     {
         m_Status = status;
     }
 
-    public Vector3 Location
-    {
-        get { return m_location; }
-        set { m_location = value; }
-    }
+
+    #endregion
+
+
+
+
+
 
     [PunRPC]
     void NetworkTrigger(bool nttrigger)

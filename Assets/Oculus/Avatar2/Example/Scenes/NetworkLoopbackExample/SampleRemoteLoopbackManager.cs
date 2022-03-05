@@ -373,6 +373,7 @@ public class SampleRemoteLoopbackManager : MonoBehaviour
 
     private void ReceivePacketData(OvrAvatarEntity loopbackAvatar, in NativeSlice<byte> data, StreamLOD lod)
     {
+        Debug.Log(gameObject.name +"Set data length"+ data.Length);
         loopbackAvatar.ApplyStreamData(in data);
     }
 

@@ -16,12 +16,8 @@ public class PhotonOVRPlayer : MonoBehaviourPun
     OVRManager ovrManager;
     PhotonGameManager GM;
 
+    private ulong AvatarID;
 
-    [SerializeField]
-    public ulong AvatarID;
-
-    bool BodyisLoaded = false;
-    bool BodyNetworkSyncExists = false;
 
     [SerializeField] FadeController fadeController;
     [SerializeField] OVRCameraRig myCameraRig;
@@ -32,15 +28,17 @@ public class PhotonOVRPlayer : MonoBehaviourPun
     [SerializeField] LocomotionController locomotionController;
     [SerializeField] LocomotionTeleport locomotionTeleport;
     [SerializeField] SimpleCapsuleWithStickMovement stickmovement;
-    [SerializeField] RemoteLoopbackManager RemoteAvatarController;
 
     [SerializeField] PhotonAvatarController LocalAvatar;
-    [SerializeField] PhotonAvatarController RemoteAvatar;
-    [SerializeField] AvatarLayer DontRenderLayer;
-    [SerializeField] GameObject RemoteAvatarPrefab;
+    [SerializeField] SampleAvatarEntity RemoteAvatar;
 
-    GameObject Robot;
-    OvrAvatarComponent[] SyncRobotComponent;
+    [SerializeField] GameObject[] FakeAvatar;
+
+    [Header ("DebugControl")]
+    [SerializeField] private bool ActiveFakeAvatar;
+    [SerializeField] private bool Debug_ActiveNetworkRemoteAvatar;
+
+    public bool IsSyncToLocalRemoteAvatar { get {return Debug_ActiveNetworkRemoteAvatar; } }
 
     private void Awake()
     {
@@ -62,25 +60,10 @@ public class PhotonOVRPlayer : MonoBehaviourPun
         }
 
 
-        //if is mine
-        //add avatar
-        //set my id to avatar
-        //ovr init
-
-        //if not mine
-        //get targert id
-        //add avatar component
-        //avatar script read my avatar id
-        //set id to avatar
-        
-        //control avatar appearence layer
         if (photonView.IsMine)
         {
-            //addRemoteAvatarInitial();
-            // RemoteAvatar.FirstPersonLayer = DontRenderLayer;
-            // RemoteAvatar.ThirdPersonLayer = DontRenderLayer;
             LocalAvatar.gameObject.SetActive(true);
-            RemoteAvatar.gameObject.SetActive(true);
+            RemoteAvatar.gameObject.SetActive(Debug_ActiveNetworkRemoteAvatar);
         }
         else
         {
@@ -88,14 +71,16 @@ public class PhotonOVRPlayer : MonoBehaviourPun
             RemoteAvatar.gameObject.SetActive(true);
             GetNetworkAvatarID();
         }
-        
+
+        SetFakeAvatar(ActiveFakeAvatar);
+
+
     }
 
     private void Start()
     {
         if (photonView.IsMine)
         {
-            Debug.LogError("Keep camera enable");
             mycamera.enabled = true;
             mycamera.gameObject.AddComponent<OVRScreenFade>();  // singleton
 
@@ -105,29 +90,33 @@ public class PhotonOVRPlayer : MonoBehaviourPun
         }
         else
         {
-            Debug.LogError("disable camera ");
             mycamera.enabled = false;
         }
     }
-    #region
 
-
-
-    #endregion
-
-   
-
+    // ask NTObject owner to get its loaded CS AvatarID from remote Quest owner
     void GetNetworkAvatarID()
     {
         photonView.RPC("GetOculusUserID", photonView.Owner, PhotonNetwork.LocalPlayer.ActorNumber);
     }
+
+    void SetFakeAvatar(bool active)
+    {
+        foreach(GameObject skeleton in FakeAvatar)
+        {
+            skeleton.SetActive(active);
+        }
+    }
+
+
+    #region RPC method
 
     [PunRPC]
     void GetOculusUserID(int playeractionnumber)
     {
         foreach (Player p in PhotonNetwork.PlayerList)
         {
-            if(playeractionnumber == p.ActorNumber)
+            if (playeractionnumber == p.ActorNumber) // send my id to target network player
             {
                 Debug.LogErrorFormat("Send my avatarid {0} to player {1}", LocalAvatar.GetAvatarID(), p);
                 photonView.RPC("SetOculusUserID", p, LocalAvatar.GetAvatarID().ToString());
@@ -136,14 +125,16 @@ public class PhotonOVRPlayer : MonoBehaviourPun
     }
 
     [PunRPC]
-    void SetOculusUserID(string avatarid)
+    void SetOculusUserID(string avatarid)//set received ID to my oculus avatar, call load avatar in AvatarEntity
     {
-        Debug.LogError("Set AvatarID "+ avatarid);
-        AvatarID =  ulong.Parse( avatarid);
+        Debug.LogErrorFormat("{0} Set AvatarID {1} on remote avatar", photonView.ViewID, avatarid);
+        AvatarID = ulong.Parse(avatarid);
         RemoteAvatar.SetRemoteAvatar(AvatarID);
 
     }
 
+
+    #endregion
 
     #region Public method
 
@@ -194,18 +185,6 @@ public class PhotonOVRPlayer : MonoBehaviourPun
         return ovrManager;
     }
 
-    public void testRPC(string msg)
-    {
-        if (photonView.IsMine)
-        {
-            Debug.LogError(photonView.ViewID + "receive rpc call " + msg);
-        }
-        else
-        {
-            Debug.LogError(photonView.ViewID + " Not my object" + msg);
-        }
-    }
-
     public void TeleportTo(Vector3 tplocation)
     {
         if (photonView.IsMine)
@@ -220,13 +199,17 @@ public class PhotonOVRPlayer : MonoBehaviourPun
             Debug.LogError("Not My Object" + photonView);
         }
     }
+    #endregion
+
+    #region IEnumerator
+
     IEnumerator SmoothTeleport(Vector3 location)
     {
-        if(fadeController)
+        if (fadeController)
             fadeController.TPStart();
         yield return new WaitForSeconds(0.5f);
         teleportController.Teleport(location);
-        if(fadeController)
+        if (fadeController)
             fadeController.TPEnd();
 
         Debug.LogErrorFormat("Player {0} tp complete", photonView.ViewID);

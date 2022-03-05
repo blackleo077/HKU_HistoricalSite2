@@ -35,7 +35,6 @@ public class OVRInputController : MonoBehaviourPun
         if (GetComponent<PhotonView>().IsMine)
         {
              UpdateLaser();
-            DebugPrintText();
             if (PhotonNetwork.IsMasterClient)
             {
                 RecallPlayersButton();
@@ -84,10 +83,6 @@ public class OVRInputController : MonoBehaviourPun
 
     void DebugPrintText()
     {
-        if (OVRInput.GetDown(DebugPrintTexyBT) || Input.GetKeyDown(KeyCode.D))
-        {
-            Debug.LogError(photonView.ViewID + " player avatar" + player.AvatarID);
-        }
     }
 
     void RecallPlayers()

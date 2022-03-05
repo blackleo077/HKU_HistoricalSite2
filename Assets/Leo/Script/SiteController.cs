@@ -9,10 +9,13 @@ public class SiteController : MonoBehaviourPunCallbacks
 {
     [SerializeField] Transform ArtifactRoot;
     [SerializeField] Transform[] PreSettleLocation;
+    [SerializeField] Sprite[] PreSettleLocationSprite;
     [SerializeField] Artifacts[] ArtifactsPrefab;
+    [SerializeField] Artifacts InfoMarkPrefab;
     // Start is called before the first frame update
 
     List<Vector3> Waitinglocations = new List<Vector3>();
+    List<Sprite> WaitingSprites = new List<Sprite>();
     List<Vector3> OccupiedLocations = new List<Vector3>();
 
     List<Artifacts> WaitingArtifacts = new List<Artifacts>();
@@ -21,13 +24,22 @@ public class SiteController : MonoBehaviourPunCallbacks
 
 
     //no used
-    public enum SpawnType
+    enum SpawnSequence
     {
-        LocationBase,
-        ArtifactsBase
+        InOrder,
+        Random
     }
 
-    public SpawnType SpawnOrder; //nouse
+    [SerializeField] private SpawnSequence SpawnOrder;
+
+    enum ObjectType
+    {
+        Artifacts,
+        InfoMark
+    }
+
+    [SerializeField] private ObjectType SpawnObjectType;
+
     void Start()
     {
         if (PhotonNetwork.IsMasterClient)
@@ -41,6 +53,7 @@ public class SiteController : MonoBehaviourPunCallbacks
         }
     }
 
+    #region Test
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         Debug.LogError("PlayerEnter Room"+newPlayer.ActorNumber);
@@ -74,32 +87,6 @@ public class SiteController : MonoBehaviourPunCallbacks
         base.OnPlayerEnteredRoom(newPlayer);
     }
 
-    public IEnumerator SpawnArtifact(bool repeatSpawn)
-    {
-
-        Artifacts art = DrawRandomSpawnArtifact();
-        Vector3 location = DrawRandomSpawnLocation();
-
-        if (art == null)
-        {
-            Debug.LogError("No more artifact exists");
-            yield return false;
-        }
-        else if (location == null)
-        {
-            Debug.LogError("No more emptylocation exists");
-            yield return false;
-        }
-        else
-        {
-            Debug.Log("SpawnArtifact at location");
-            SpawnArtifactsAt(art, location);
-            if (repeatSpawn)
-            {
-                StartCoroutine(SpawnArtifact(true));
-            }
-        }
-    }
     [PunRPC]
     void RequestNetworkSpawnArtifacts(int pid)
     {
@@ -136,27 +123,61 @@ public class SiteController : MonoBehaviourPunCallbacks
         SpawnArtifactsAt(art, location);
     }
 
+    #endregion
+
     void InitSitesArtifacts()
     {
-        if (SpawnOrder == SpawnType.LocationBase)
+        if (SpawnObjectType == ObjectType.Artifacts) //spawn artifacts from array 
         {
-
-        } else if (SpawnOrder == SpawnType.ArtifactsBase)
-        {
-
+            for (int i = 0; i < ArtifactsPrefab.Length; i++)
+            {
+                Artifacts art = PhotonNetwork.Instantiate(ArtifactsPrefab[i].gameObject.name, Vector3.zero, Quaternion.identity).GetComponent<Artifacts>();
+                WaitingArtifacts.Add(art);
+                art.gameObject.SetActive(false);
+            }
         }
-        for (int i = 0; i < ArtifactsPrefab.Length; i++)
+        else if (SpawnObjectType == ObjectType.InfoMark) // spawn infomark to same number of location length
         {
-            Artifacts art = PhotonNetwork.Instantiate(ArtifactsPrefab[i].gameObject.name,Vector3.zero,Quaternion.identity).GetComponent<Artifacts>();
-            WaitingArtifacts.Add(art);
-            art.gameObject.SetActive(false);
+            for (int i = 0; i < PreSettleLocationSprite.Length; i++)
+            {
+                Artifacts infomark = PhotonNetwork.Instantiate(InfoMarkPrefab.gameObject.name, Vector3.zero, Quaternion.identity).GetComponent<Artifacts>();
+                infomark.SetInfoImage(PreSettleLocationSprite[i]);
+                WaitingArtifacts.Add(infomark);
+                infomark.gameObject.SetActive(false);
+            }
         }
 
-        for (int i = 0; i < PreSettleLocation.Length; i++) 
+        for (int i = 0; i < PreSettleLocation.Length; i++)
         {
             Waitinglocations.Add(PreSettleLocation[i].position);
         }
     }
+    public IEnumerator SpawnArtifact(bool repeatSpawn)
+    {
+        Artifacts art = DrawSpawnArtifact();
+        Vector3 location = DrawSpawnLocation();
+
+        if (art == null)
+        {
+            Debug.LogError("No more artifact exists");
+            yield return false;
+        }
+        else if (location == null)
+        {
+            Debug.LogError("No more emptylocation exists");
+            yield return false;
+        }
+        else
+        {
+            Debug.Log("SpawnArtifact at location");
+            SpawnArtifactsAt(art, location);
+            if (repeatSpawn)
+            {
+                StartCoroutine(SpawnArtifact(true));
+            }
+        }
+    }
+
 
     void SpawnArtifactsAt(Artifacts artifacts,Vector3 targetlocation)
     {
@@ -173,7 +194,8 @@ public class SiteController : MonoBehaviourPunCallbacks
         artifacts.gameObject.SetActive(true);
     }
 
-    Vector3 DrawRandomSpawnLocation()
+
+    Vector3 DrawSpawnLocation()
     {
         Vector3 templocation = Vector3.zero;
         if (Waitinglocations.Count <= 0)
@@ -182,13 +204,20 @@ public class SiteController : MonoBehaviourPunCallbacks
         }
         else
         {
-            int ran = Random.Range(0, Waitinglocations.Count);
-            templocation = Waitinglocations[ran];
+            if (SpawnOrder == SpawnSequence.Random)
+            {
+                int ran = Random.Range(0, Waitinglocations.Count);
+                templocation = Waitinglocations[ran];
+            }
+            else
+            {
+                templocation = Waitinglocations[0];
+            }
             return templocation;
         }
     }
 
-    Artifacts DrawRandomSpawnArtifact()
+    Artifacts DrawSpawnArtifact()
     {
         Artifacts art = null;
         if (WaitingArtifacts.Count <= 0)
@@ -197,8 +226,16 @@ public class SiteController : MonoBehaviourPunCallbacks
         }
         else
         {
-            int ran = Random.Range(0, WaitingArtifacts.Count);
-            art = WaitingArtifacts[ran];
+            if (SpawnOrder == SpawnSequence.Random)
+            {
+                int ran = Random.Range(0, WaitingArtifacts.Count);
+                art = WaitingArtifacts[ran];
+            }
+            else
+            {
+                art = WaitingArtifacts[0];
+
+            }
             return art;
         }
     }

@@ -8,6 +8,7 @@ public class FadeController : MonoBehaviour
 
     public void TPStart()
     {
+        Debug.Log("Start Fade");
         OVRScreenFade.instance.fadeTime = 0.1f;
         OVRScreenFade.instance.FadeOut();
     }

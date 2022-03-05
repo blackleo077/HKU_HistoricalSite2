@@ -118,6 +118,16 @@ public class SampleAvatarEntity : OvrAvatarEntity
 #endif
     }
 
+    public void SetRemoteAvatar(ulong uid)
+    {
+        if (uid == 0)
+        {
+            uid = (ulong)6703037566437409;
+        }
+        _userId = uid;
+        StartCoroutine(Retry_HasAvatarRequest());
+    }
+
     #region Loading
     private IEnumerator LoadCdnAvatar()
     {
@@ -171,7 +181,6 @@ public class SampleAvatarEntity : OvrAvatarEntity
     {
         if (_userId == 0)
         {
-            Debug.LogError("LoadUserAvatar");
             LoadLocalAvatar();
             yield break;
         }

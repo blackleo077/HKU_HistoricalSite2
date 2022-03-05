@@ -13,11 +13,15 @@ using StreamLOD = Oculus.Avatar2.OvrAvatarEntity.StreamLOD;
 
 public class AvatarNetworkController : MonoBehaviourPunCallbacks
 {
+    private PhotonOVRPlayer player;
+    [SerializeField] private float RPCInterval = 1;
+    private float RPCCountDown;
+
     private const string logScope = "SampleRemoteLoopbackManager";
 
     // Const & Static Variables
     private const float PLAYBACK_SMOOTH_FACTOR = 0.25f;
-    private const int MAX_PACKETS_PER_FRAME = 3;
+    private const int MAX_PACKETS_PER_FRAME = 1;
 
     private static readonly float[] StreamLodSnapshotIntervalSeconds = new float[OvrAvatarEntity.StreamLODCount] { 1f / 72, 2f / 72, 3f / 72, 4f / 72 };
 
@@ -65,11 +69,20 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
 
     class LoopbackState
     {
-        public List<PacketData> packetQueue = new List<PacketData>(64);
-        public List<byte[]> packetData = new List<byte[]>(32);
+        //public List<PacketData> packetQueue = new List<PacketData>(64);
+        public List<AvatarPacketData> packetData = new List<AvatarPacketData>(64);
         public StreamLOD requestedLod = StreamLOD.Low;
         public float smoothedPlaybackDelay = 0f;
     };
+
+    class AvatarPacketData
+    {
+        public byte[] avatarData;
+        public StreamLOD lod;
+        public float Latency;
+    };
+    private readonly List<AvatarPacketData> packetDataPool = new List<AvatarPacketData>(32);
+    private readonly List<AvatarPacketData> packetDeadList = new List<AvatarPacketData>(16);
 
     [System.Serializable]
     public class SimulatedLatencySettings
@@ -109,6 +122,7 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
         }
     };
 
+    public SimulatedLatencySettings LatencySettings = new SimulatedLatencySettings();
     #endregion
 
     // Serialized Variables
@@ -119,7 +133,7 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
     // Private Variables
     private Dictionary<OvrAvatarEntity, LoopbackState> _loopbackStates =
         new Dictionary<OvrAvatarEntity, LoopbackState>();
-
+    /*
     private readonly List<PacketData> _packetPool = new List<PacketData>(32);
     private readonly List<PacketData> _deadList = new List<PacketData>(16);
 
@@ -146,7 +160,7 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
         Debug.Assert(packet.Unretained);
         _packetPool.Add(packet);
     }
-
+    */
     private readonly float[] _streamLodSnapshotElapsedTime = new float[OvrAvatarEntity.StreamLODCount];
 
     byte[] _packetBuffer = new byte[16 * 1024];
@@ -170,6 +184,12 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
 
     protected void Start()
     {
+
+        player = GetComponentInParent<PhotonOVRPlayer>();
+
+        float FirstValue = UnityEngine.Random.Range(LatencySettings.fakeLatencyMin, LatencySettings.fakeLatencyMax);
+        LatencySettings.latencyValues.AddFirst(FirstValue);
+        LatencySettings.latencySum += FirstValue;
         // Check for other LoopbackManagers in the current scene
         var loopbackManagers = FindObjectsOfType<SampleRemoteLoopbackManager>();
         if (loopbackManagers.Length > 1)
@@ -199,16 +219,6 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
 
     private void CreateStates()
     {
-        foreach (var item in _loopbackStates)
-        {
-            foreach (var packet in item.Value.packetQueue)
-            {
-                if (packet.Release())
-                {
-                    ReturnPacket(packet);
-                }
-            }
-        }
         _loopbackStates.Clear();
 
         foreach (var loopbackAvatar in _loopbackAvatars)
@@ -224,23 +234,8 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
         {
             _pinnedBuffer.Free();
         }
-
-        foreach (var item in _loopbackStates)
-        {
-            foreach (var packet in item.Value.packetQueue)
-            {
-                if (packet.Release())
-                {
-                    ReturnPacket(packet);
-                }
-            }
-        }
-
-        foreach (var packet in _packetPool)
-        {
-            packet.Dispose();
-        }
-        _packetPool.Clear();
+        packetDataPool.Clear();
+       // _packetPool.Clear();
     }
 
     private void Update()
@@ -266,12 +261,23 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
 
             if (loopbackState.packetData.Count > 0)
             {
-                Debug.Log("received queue :" + loopbackState.packetData.Count);
-                foreach (var datebyte in loopbackState.packetData)
+                foreach (var packet in loopbackState.packetData)
                 {
-                    ReceivePacketData(loopbackAvatar, datebyte, loopbackState.requestedLod);
+
+                    packet.Latency -= Time.deltaTime;
+                    if (packet.Latency <=0f)
+                    {
+                        ReceivePacketData(loopbackAvatar, packet.avatarData, loopbackState.requestedLod);
+                        packetDeadList.Add(packet);
+                    }
                 }
             }
+
+            foreach (var packet in packetDeadList)
+            {
+                loopbackState.packetData.Remove(packet);
+            }
+            packetDeadList.Clear();
 
             // "Send" the lod that "remote" avatar wants to use back over the network
             // TODO delay this reception for an accurate test
@@ -282,13 +288,20 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
     private void LateUpdate()
     {
         // Local avatar has fully updated this frame and can send data to the network
-        if (PhotonNetwork.IsConnected)
+        if (PhotonNetwork.IsConnected&& photonView.IsMine)
         {
-            if (photonView.IsMine)
+            if (RPCCountDown <= 0)
             {
                 SendSnapshot();
+                RPCCountDown = RPCInterval;
+            }
+            else
+            {
+                RPCCountDown -= Time.deltaTime;
             }
         }
+        
+
     }
 
     #endregion
@@ -316,28 +329,27 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
         }
     }
 
-
     private void SendAvatarData(StreamLOD lod)
     {
         byte[] databytes = _localAvatar.RecordStreamData(lod);
-        photonView.RPC("SendPacketRPC", RpcTarget.Others, databytes);
+        float latency = LatencySettings.NextValue();
+        photonView.RPC("AddPacketToQueue", RpcTarget.Others, databytes, (int)lod, latency);
+
+        if(player.IsSyncToLocalRemoteAvatar) AddPacketToQueue(databytes, (int)lod, latency);
     }
 
     [PunRPC]
-    private void SendPacketRPC(byte[] databytes, int lod)
+    private void AddPacketToQueue(byte[] databyte, int lod, float latency)
     {
-        Debug.Log("SendPacketRPC");
-        AddPacketToQueue(databytes, lod);
-    }
-
-    private void AddPacketToQueue(byte[] databyte, int lod)
-    {
-        Debug.Log("AddPacketToQueue");
         foreach (var loopbackState in _loopbackStates.Values)
         {
             if (loopbackState.requestedLod == (StreamLOD)lod)
             {
-                loopbackState.packetData.Add(databyte);
+                AvatarPacketData packet = new AvatarPacketData();
+                packet.avatarData = databyte;
+                packet.lod = (StreamLOD)lod;
+                packet.Latency = latency;
+                loopbackState.packetData.Add(packet);
             }
         }
     }
@@ -371,7 +383,8 @@ public class AvatarNetworkController : MonoBehaviourPunCallbacks
 
     private void ReceivePacketData(OvrAvatarEntity loopbackAvatar, byte[] data, StreamLOD lod)
     {
-        loopbackAvatar.ApplyStreamData( data);
+        Debug.Log(photonView.ViewID + "apply data");
+        loopbackAvatar.ApplyStreamData(data);
     }
 
     #endregion

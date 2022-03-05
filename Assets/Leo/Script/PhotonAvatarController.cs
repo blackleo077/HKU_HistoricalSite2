@@ -75,6 +75,10 @@ public class PhotonAvatarController : OvrAvatarEntity
     [Header("Sample Networking")]
     [Tooltip("Streaming quality override, default will not override")]
     [SerializeField] private OverrideStreamLOD _overrideStreamLod = OverrideStreamLOD.Default;
+
+    private static readonly int DESAT_AMOUNT_ID = Shader.PropertyToID("_DesatAmount");
+    private static readonly int DESAT_TINT_ID = Shader.PropertyToID("_DesatTint");
+    private static readonly int DESAT_LERP_ID = Shader.PropertyToID("_DesatLerp");
     private bool HasLocalAvatarConfigured => _assets.Count > 0;
 
     protected IEnumerator Start()
@@ -361,4 +365,86 @@ public class PhotonAvatarController : OvrAvatarEntity
     }
 
     #endregion
+    #region Fade/Desat
+
+    private static readonly Color AVATAR_FADE_DEFAULT_COLOR = new Color(33 / 255f, 50 / 255f, 99 / 255f, 0f); // "#213263"
+    private static readonly float AVATAR_FADE_DEFAULT_COLOR_BLEND = 0.7f; // "#213263"
+    private static readonly float AVATAR_FADE_DEFAULT_GRAYSCALE_BLEND = 0;
+
+    [Header("Rendering")]
+    [SerializeField] [Range(0, 1)] private float shaderGrayToSolidColorBlend_ = AVATAR_FADE_DEFAULT_COLOR_BLEND;
+    [SerializeField] [Range(0, 1)] private float shaderDesatBlend_ = AVATAR_FADE_DEFAULT_GRAYSCALE_BLEND;
+    [SerializeField] private Color shaderSolidColor_ = AVATAR_FADE_DEFAULT_COLOR;
+
+    public float ShaderGrayToSolidColorBlend
+    {
+        // Blends grayscale to solid color
+        get => shaderGrayToSolidColorBlend_;
+        set
+        {
+            if (Mathf.Approximately(value, shaderGrayToSolidColorBlend_))
+            {
+                shaderGrayToSolidColorBlend_ = value;
+                UpdateMaterialsWithDesatModifiers();
+            }
+        }
+    }
+
+    public float ShaderDesatBlend
+    {
+        // Blends shader color to result of ShaderGrayToSolidColorBlend
+        get => shaderDesatBlend_;
+        set
+        {
+            if (Mathf.Approximately(value, shaderDesatBlend_))
+            {
+                shaderDesatBlend_ = value;
+                UpdateMaterialsWithDesatModifiers();
+            }
+        }
+    }
+
+    public Color ShaderSolidColor
+    {
+        get => shaderSolidColor_;
+        set
+        {
+            if (shaderSolidColor_ != value)
+            {
+                shaderSolidColor_ = value;
+                UpdateMaterialsWithDesatModifiers();
+            }
+        }
+    }
+
+    public void SetShaderDesat(float desatBlend, float? grayToSolidBlend = null, Color? solidColor = null)
+    {
+        if (solidColor.HasValue)
+        {
+            shaderSolidColor_ = solidColor.Value;
+        }
+        if (grayToSolidBlend.HasValue)
+        {
+            shaderGrayToSolidColorBlend_ = grayToSolidBlend.Value;
+        }
+        shaderDesatBlend_ = desatBlend;
+        UpdateMaterialsWithDesatModifiers();
+    }
+
+    private void UpdateMaterialsWithDesatModifiers()
+    {
+        // TODO: Migrate to `OvrAvatarMaterial` system
+#pragma warning disable 618 // disable deprecated method call warnings
+        SetMaterialKeyword("DESAT", shaderDesatBlend_ > 0.0f);
+        SetMaterialProperties((block, entity) =>
+        {
+            block.SetFloat(DESAT_AMOUNT_ID, entity.shaderDesatBlend_);
+            block.SetColor(DESAT_TINT_ID, entity.shaderSolidColor_);
+            block.SetFloat(DESAT_LERP_ID, entity.shaderGrayToSolidColorBlend_);
+        }, this);
+#pragma warning restore 618 // restore deprecated method call warnings
+    }
+
+    #endregion
+
 }
