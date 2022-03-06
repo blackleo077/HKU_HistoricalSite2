@@ -141,6 +141,7 @@ public class SiteController : MonoBehaviourPunCallbacks
             for (int i = 0; i < PreSettleLocationSprite.Length; i++)
             {
                 Artifacts infomark = PhotonNetwork.Instantiate(InfoMarkPrefab.gameObject.name, Vector3.zero, Quaternion.identity).GetComponent<Artifacts>();
+                infomark.SetBoardStyle(Artifacts.BoardStyle.Image);
                 infomark.SetInfoImage(PreSettleLocationSprite[i]);
                 WaitingArtifacts.Add(infomark);
                 infomark.gameObject.SetActive(false);

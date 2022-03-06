@@ -19,8 +19,14 @@ public class Artifacts : MonoBehaviour
         visible,
         discoverd,
     }
-
     private discoverStatus m_Status;
+
+    public enum BoardStyle
+    {
+        Text,
+        Image,
+    }
+    private BoardStyle myBoardStyle;
 
     private InfoBoard infoBoard;
 
@@ -29,18 +35,20 @@ public class Artifacts : MonoBehaviour
         get { return m_location; }
         set { m_location = value; }
     }
-
-
-
-
-
-
-
+    SelfFloating floatcontroller;
     private void Start()
     {
-        SetInfoText();
+        floatcontroller = new SelfFloating(transform.position);
+    }
+    private void Update()
+    {
+        floatcontroller.RotateY(this.transform);
     }
 
+    public void SetBoardStyle(BoardStyle style)
+    {
+        myBoardStyle = style;
+    }
 
     #region Public method
 
@@ -64,9 +72,17 @@ public class Artifacts : MonoBehaviour
                 return;
 
             infoBoard = GameObject.Instantiate((GameObject)Resources.Load("InfoBoard") as GameObject, transform.position , Quaternion.identity).GetComponent<InfoBoard>();
-            infoBoard.Init(m_Name, m_Description, transform.position,true,true);
+            if (myBoardStyle == BoardStyle.Text)
+            {
+                infoBoard.Init(m_Name, m_Description);
+            }
+            else if (myBoardStyle == BoardStyle.Image)
+            {
+                infoBoard.Init(m_Image);
+            }
+            infoBoard.SetFloatingStyle(transform.position, true, false);
+
             isNetworkTrigger = true;
-           // NetworkTrigger(true);
         }
         else
         {
@@ -76,7 +92,6 @@ public class Artifacts : MonoBehaviour
             Debug.Log("kill board2");
             Destroy(infoBoard.gameObject);
 
-           // NetworkTrigger(false);
         }
     }
 
@@ -89,13 +104,9 @@ public class Artifacts : MonoBehaviour
     #endregion
 
 
+    #region
+    #endregion
 
 
-
-
-    [PunRPC]
-    void NetworkTrigger(bool nttrigger)
-    {
-    }
 
 }

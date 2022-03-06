@@ -60,7 +60,7 @@ public class Pointer : Tools
     {
         RaycastHit[] hit;
 
-        hit = Physics.RaycastAll(transform.position, transform.forward, 200f, ArtifactLayer);
+        hit = Physics.RaycastAll(transform.position, transform.forward, 50f, ArtifactLayer);
         if (hit.Length > 0)
         {
             setLaser(transform.position, hit[0].collider.transform.position, Color.green);

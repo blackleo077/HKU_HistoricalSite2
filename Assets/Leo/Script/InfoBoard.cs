@@ -7,28 +7,29 @@ public class InfoBoard : MonoBehaviour
 {
     private string name;
     private string description;
+    private Sprite image;
     private Transform root;
-    private Vector3 SpawnPos;
-    private Vector3 FloatingPos;
 
-    bool isFloat = false;
-    bool isRotatY = false;
     bool isSpawned = false;
 
     private float BoardSpawnYOffset = 1.7f;
-    public float degreesPerSecond = 15.0f;
-    public float amplitude = 0.5f;
-    public float frequency = 1f;
 
-
+    Vector3 SpawnPos;
+    bool isFloat = false;
+    bool isRotatY = false;
 
     public float PopupSpeed = 10f;
+    public Image UI_Border;
+    [SerializeField]private float BorderOffset = 35f;
     public Text UI_name;
     public Text UI_description;
+    public Image UI_Image;
+
+    SelfFloating floatcontroller;
 
     private void Start()
     {
-        
+
     }
 
     private void Update()
@@ -49,36 +50,58 @@ public class InfoBoard : MonoBehaviour
         root.LookAt(Camera.main.transform);
 
     }
-    public void Init(string name, string description, Vector3 startPos, bool isFloat, bool isRotatY)
+
+    public void Init(string n, string des)
     {
-        this.name = name;
-        this.description = description;
-        this.SpawnPos = startPos + new Vector3(0, BoardSpawnYOffset, 0);
-        FloatingPos = this.SpawnPos;
+        name = n;
+        description = des;
+        if (name == "" || description == "")
+            return;
+
+        UI_name.text = name;
+        UI_description.text = description;
+        UI_name.gameObject.SetActive(true);
+        UI_description.gameObject.SetActive(true);
+    }
+    public void Init(Sprite img)
+    {
+        image = img;
+        if (img == null)
+        {
+            Debug.LogError("Target info board without sprite image");
+            return;
+        }
+
+        UI_Image.sprite  = image;
+        UI_Image.SetNativeSize();
+        float MaskHeight = UI_Image.transform.parent.GetComponent<RectTransform>().rect.height;
+        Vector2 currentimgSize = UI_Image.rectTransform.sizeDelta;
+        float Ratio = currentimgSize.x / currentimgSize.y;
+        float HeightDiff = Mathf.Abs( MaskHeight - currentimgSize.y);
+        Debug.Log("MaskHeight : "+ MaskHeight);
+        Vector2 ImgSize = new Vector2(HeightDiff * Ratio + currentimgSize.x, MaskHeight);
+        UI_Image.rectTransform.sizeDelta = ImgSize;
+
+        UI_Border.rectTransform.sizeDelta = new Vector2(ImgSize.x + BorderOffset, UI_Border.rectTransform.sizeDelta.y);//35 border offset
+        UI_Image.gameObject.SetActive(true);
+    }
+
+    public void SetFloatingStyle(Vector3 startPos, bool isFloat, bool isRotatY)
+    {
+        SpawnPos = startPos + new Vector3(0, BoardSpawnYOffset, 0);
+        floatcontroller = new SelfFloating(SpawnPos);
         this.isFloat = isFloat;
         this.isRotatY = isRotatY;
         root = transform.GetChild(0);
-        SetInfo();
     }
-
-    void SetInfo()
-    {
-        if (name == "" || description == "")
-            return;
-        UI_name.text = name;
-        UI_description.text = description;
-    }
-
     void Float()
     {
-        FloatingPos = SpawnPos;
-        FloatingPos.y += Mathf.Sin(Time.fixedTime * Mathf.PI * frequency) * amplitude;
-        transform.position = FloatingPos;
+        transform.position = floatcontroller.Floating();
     }
 
     void RotateY()
     {
-        transform.Rotate(new Vector3(0f, Time.deltaTime * degreesPerSecond, 0f), Space.World);
+        floatcontroller.RotateY(this.transform);
     }
 
 
