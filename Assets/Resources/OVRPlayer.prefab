@@ -1085,7 +1085,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputcontroller: {fileID: 56166881}
-  handR: {fileID: 8109327442575872802}
+  spawnToolTransform: {fileID: 0}
   ToolsPrefab:
   - {fileID: 6498050943535453504, guid: bae788556d9e9b44898089ae403efff0, type: 3}
 --- !u!114 &56166883

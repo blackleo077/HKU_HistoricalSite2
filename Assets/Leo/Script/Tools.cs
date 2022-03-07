@@ -39,7 +39,10 @@ public class Tools : MonoBehaviour
         OnToolTrigger(); 
     }
 
-    public void ActivatingTool(){ OnToolActiviting(); }
+    public void ActivatingTool()
+    { 
+        OnToolActiviting(); 
+    }
 
     public void ReleaseTool()
     {

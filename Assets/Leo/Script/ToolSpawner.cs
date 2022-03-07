@@ -7,7 +7,7 @@ public class ToolSpawner : MonoBehaviour
 
     public OVRInputController inputcontroller;
 
-    public Transform handR;
+    public Transform spawnToolTransform;
     public Tools[] ToolsPrefab;
 
     public enum ToolsType
@@ -25,7 +25,7 @@ public class ToolSpawner : MonoBehaviour
     {
         Debug.Log("SpawnTool");
         RemoveExistTool();
-        Tools tool = GameObject.Instantiate(ToolsPrefab[(int)toolsType].gameObject, Vector3.zero, Quaternion.identity, handR).GetComponent<Tools>();
+        Tools tool = GameObject.Instantiate(ToolsPrefab[(int)toolsType].gameObject, Vector3.zero, Quaternion.identity, spawnToolTransform).GetComponent<Tools>();
         tool.transform.localPosition = Vector3.zero;
         tool.transform.localRotation = Quaternion.identity;
         currentTools = tool;

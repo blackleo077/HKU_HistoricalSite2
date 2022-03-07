@@ -14,6 +14,7 @@ using Oculus.Platform.Models;
 public class OVRInputController : MonoBehaviourPun
 {
     PhotonOVRPlayer player;
+    ToolSpawner toolSpawner;
 
     public OVRInput.Button LaserButton;
     public OVRInput.Axis1D LaserAxis;
@@ -26,7 +27,8 @@ public class OVRInputController : MonoBehaviourPun
 
     private void Start()
     {
-        GetComponent<ToolSpawner>().inputcontroller = this;
+        toolSpawner = GetComponent<ToolSpawner>();
+        toolSpawner.inputcontroller = this;
         player = GetComponentInParent<PhotonOVRPlayer>();
     }
 
@@ -67,7 +69,8 @@ public class OVRInputController : MonoBehaviourPun
         }
         else
         {
-            GetComponent<ToolSpawner>().SpawnTool(ToolSpawner.ToolsType.laser);
+            //should be spawn base on the button press
+            toolSpawner.SpawnTool(ToolSpawner.ToolsType.laser);
             if (PhotonNetwork.IsConnected)
                 photonView.RPC("SpawnToolRPC", RpcTarget.OthersBuffered);
         }
@@ -77,18 +80,9 @@ public class OVRInputController : MonoBehaviourPun
     {
         if (OVRInput.GetDown(RecallTeleportButton) || Input.GetKeyDown(KeyCode.R) )
         {
-            RecallPlayers();
+            Debug.LogError(photonView.ViewID + "RecallPlayer");
+            player.RecallPlayers();
         }
-    }
-
-    void DebugPrintText()
-    {
-    }
-
-    void RecallPlayers()
-    {
-        Debug.LogError(photonView.ViewID +"RecallPlayer");
-        player.RecallPlayers();
     }
 
     public void attachTool(Tools t)
@@ -101,7 +95,7 @@ public class OVRInputController : MonoBehaviourPun
     }
 
 
-    #region
+    #region RPC
     [PunRPC]
     void TriggerToolRPC()
     {
@@ -123,7 +117,7 @@ public class OVRInputController : MonoBehaviourPun
     [PunRPC]
     void SpawnToolRPC()
     {
-        GetComponent<ToolSpawner>().SpawnTool(ToolSpawner.ToolsType.laser);
+        toolSpawner.SpawnTool(ToolSpawner.ToolsType.laser);
     }
 
 
